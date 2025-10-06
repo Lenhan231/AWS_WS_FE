@@ -25,6 +25,20 @@ interface AuthState {
   initializeAuth: () => Promise<void>;
 }
 
+// Helper function to set cookie
+const setCookie = (name: string, value: string, days: number = 7) => {
+  if (typeof window === 'undefined') return;
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+};
+
+// Helper function to delete cookie
+const deleteCookie = (name: string) => {
+  if (typeof window === 'undefined') return;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -46,18 +60,17 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          // Call Backend API instead of Cognito
           const response = await api.auth.login(email, password);
 
           if (response.success && response.data) {
             const { user, token } = response.data as any;
 
-            // Save token to localStorage
+            // Save token to localStorage AND cookie
             if (typeof window !== 'undefined') {
               localStorage.setItem('auth_token', token);
+              setCookie('auth_token', token, 7);
             }
             
-            // Set user in store
             set({
               user: {
                 id: user.id.toString(),
@@ -65,7 +78,7 @@ export const useAuthStore = create<AuthState>()(
                 firstName: user.firstName,
                 lastName: user.lastName,
                 phoneNumber: user.phoneNumber,
-                role: user.role, // This will be ADMIN, GYM_STAFF, PT_USER, or CLIENT_USER
+                role: user.role,
                 profileImageUrl: user.profileImageUrl,
                 createdAt: user.createdAt || new Date().toISOString(),
                 updatedAt: user.updatedAt || new Date().toISOString(),
@@ -94,9 +107,10 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
-          // Clear token from localStorage
+          // Clear token from localStorage AND cookie
           if (typeof window !== 'undefined') {
             localStorage.removeItem('auth_token');
+            deleteCookie('auth_token');
           }
 
           set({
@@ -110,7 +124,6 @@ export const useAuthStore = create<AuthState>()(
       register: async (userData: any) => {
         set({ isLoading: true, error: null });
         try {
-          // Call Backend API to register
           const response = await api.auth.register({
             email: userData.email,
             password: userData.password,
@@ -123,13 +136,12 @@ export const useAuthStore = create<AuthState>()(
           if (response.success && response.data) {
             const data = response.data as any;
 
-            // Check if backend returns token
             if (data.token) {
-              // Backend returns token - save directly
               const { user, token } = data;
 
               if (typeof window !== 'undefined') {
                 localStorage.setItem('auth_token', token);
+                setCookie('auth_token', token, 7);
               }
 
               set({
@@ -150,48 +162,19 @@ export const useAuthStore = create<AuthState>()(
 
               console.log('✅ Registration successful! User role:', user.role);
             } else {
-              // Backend doesn't return token - auto login
-              console.log('⚠️ Token not returned, auto-logging in...');
-
-              // Call login API
-              const loginResponse = await api.auth.login(userData.email, userData.password);
-
-              if (loginResponse.success && loginResponse.data) {
-                const { user, token } = loginResponse.data as any;
-
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('auth_token', token);
-                }
-
-                set({
-                  user: {
-                    id: user.id.toString(),
-                    email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    phoneNumber: user.phoneNumber,
-                    role: user.role,
-                    profileImageUrl: user.profileImageUrl,
-                    createdAt: user.createdAt || new Date().toISOString(),
-                    updatedAt: user.updatedAt || new Date().toISOString(),
-                  },
-                  isAuthenticated: true,
-                  isLoading: false
-                });
-
-                console.log('✅ Auto-login successful! User role:', user.role);
-              } else {
-                throw new Error('Auto-login failed after registration');
-              }
+              // Backend requires email confirmation
+              set({ isLoading: false });
+              console.log('📧 Please check your email to confirm registration');
             }
           } else {
             throw new Error(response.error || 'Registration failed');
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('❌ Registration error:', error);
+          const errorMessage = error?.response?.data?.message || error?.message || 'Registration failed';
           set({
-            error: error instanceof Error ? error.message : 'Registration failed',
-            isLoading: false 
+            error: errorMessage,
+            isLoading: false
           });
           throw error;
         }
@@ -200,102 +183,42 @@ export const useAuthStore = create<AuthState>()(
       confirmSignUp: async (email: string, code: string) => {
         set({ isLoading: true, error: null });
         try {
-          const result = await cognito.confirmSignUp(email, code);
-          
-          if (result.success) {
-            set({ 
-              isLoading: false,
-              error: null
-            });
-          } else {
-            throw new Error(result.error || 'Confirmation failed');
-          }
+          await cognito.confirmSignUp(email, code);
+          set({ isLoading: false });
         } catch (error) {
-          set({ 
+          set({
             error: error instanceof Error ? error.message : 'Confirmation failed',
-            isLoading: false 
+            isLoading: false
           });
+          throw error;
         }
       },
 
       forgotPassword: async (email: string) => {
         set({ isLoading: true, error: null });
         try {
-          const result = await cognito.forgotPassword(email);
-          
-          if (result.success) {
-            set({ 
-              isLoading: false,
-              error: null
-            });
-          } else {
-            throw new Error(result.error || 'Forgot password failed');
-          }
+          await cognito.forgotPassword(email);
+          set({ isLoading: false });
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Forgot password failed',
-            isLoading: false 
+          set({
+            error: error instanceof Error ? error.message : 'Failed to send reset code',
+            isLoading: false
           });
+          throw error;
         }
       },
 
       resetPassword: async (email: string, code: string, newPassword: string) => {
         set({ isLoading: true, error: null });
         try {
-          const result = await cognito.forgotPasswordSubmit(email, code, newPassword);
-
-          if (result.success) {
-            set({ 
-              isLoading: false,
-              error: null
-            });
-          } else {
-            throw new Error(result.error || 'Reset password failed');
-          }
+          await cognito.resetPassword(email, code, newPassword);
+          set({ isLoading: false });
         } catch (error) {
-          set({ 
-            error: error instanceof Error ? error.message : 'Reset password failed',
-            isLoading: false 
-          });
-        }
-      },
-
-      initializeAuth: async () => {
-        set({ isLoading: true });
-        try {
-          // Check if we have a token in localStorage
-          if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('auth_token');
-
-            if (token) {
-              // Try to get current user from persisted state
-              const { user } = get();
-
-              if (user) {
-                console.log('✅ Restored auth from localStorage:', user.role);
-                set({
-                  user,
-                  isAuthenticated: true,
-                  isLoading: false
-                });
-                return;
-              }
-            }
-          }
-
-          // No valid auth found
           set({
-            user: null,
-            isAuthenticated: false,
+            error: error instanceof Error ? error.message : 'Failed to reset password',
             isLoading: false
           });
-        } catch (error) {
-          console.error('Auth initialization error:', error);
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false 
-          });
+          throw error;
         }
       },
 
@@ -308,13 +231,39 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         return user ? roles.includes(user.role) : false;
       },
+
+      initializeAuth: async () => {
+        set({ isLoading: true });
+        try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+          if (token) {
+            const response = await api.auth.me();
+            if (response.success && response.data) {
+              const userData = response.data as any;
+              set({
+                user: userData,
+                isAuthenticated: true,
+                isLoading: false
+              });
+            } else {
+              // Token invalid, clear it
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('auth_token');
+                deleteCookie('auth_token');
+              }
+              set({ user: null, isAuthenticated: false, isLoading: false });
+            }
+          } else {
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          console.error('Auth initialization error:', error);
+          set({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      },
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ 
-        user: state.user, 
-        isAuthenticated: state.isAuthenticated 
-      }),
     }
   )
 );

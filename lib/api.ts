@@ -174,6 +174,8 @@ export const offerApi = {
 export const searchApi = {
   offers: (data: any) => apiClient.post('/search/offers', data),
   offersQuery: (params: any) => apiClient.get('/search/offers', { params }),
+  nearby: (params: { lat: number; lon: number; radius: number; type?: 'gym' | 'pt'; page?: number; size?: number }) =>
+    apiClient.get('/search/nearby', { params }),
 };
 
 // ⭐ Rating API

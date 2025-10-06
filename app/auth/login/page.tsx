@@ -15,13 +15,15 @@ import {
   Dumbbell,
   Zap,
   Shield,
-  CheckCircle
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,6 +31,8 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
+
     try {
       await login(formData.email, formData.password);
 
@@ -39,10 +43,8 @@ export default function LoginPage() {
       // Redirect based on user role
       if (user) {
         if (user.role === 'CLIENT_USER') {
-          // Client users go to homepage
           router.push('/');
         } else {
-          // Admin, GYM_STAFF, PT_USER go to their respective dashboards
           switch (user.role) {
             case 'ADMIN':
               router.push('/dashboard/admin');
@@ -60,9 +62,8 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('Login failed:', error);
-      // Show error message in UI instead of alert
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      // You can add a toast notification here or display error in the form
+      const message = error instanceof Error ? error.message : 'Login failed. Please check your credentials.';
+      setErrorMessage(message);
     }
   };
 
@@ -71,6 +72,8 @@ export default function LoginPage() {
       ...prev,
       [e.target.name]: e.target.value
     }));
+    // Clear error when user starts typing
+    if (errorMessage) setErrorMessage('');
   };
 
   return (
@@ -141,126 +144,124 @@ export default function LoginPage() {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
-          <div className="w-full max-w-md animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="w-full max-w-md">
 
-            {/* Form Container với 3D Effects */}
-            <div className="relative perspective-1000">
-              <div className="glass-card rounded-3xl p-8 lg:p-12 shadow-3d-lg border border-primary-600/30 transform-3d hover:scale-[1.02] transition-all duration-500">
-                {/* Animated border */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-600 rounded-3xl opacity-20 blur-xl" />
+            {/* Form Card */}
+            <div className="glass-card rounded-3xl p-8 sm:p-12 border border-primary-600/20 shadow-3d">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary-600/30 mb-6">
+                  <Shield className="w-4 h-4 text-primary-500" />
+                  <span className="text-sm text-primary-400 font-bold uppercase tracking-wider">Secure Login</span>
+                </div>
 
-                <div className="relative">
-                  {/* Header */}
-                  <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary-600/30 mb-6">
-                      <Shield className="w-4 h-4 text-primary-500" />
-                      <span className="text-sm text-primary-400 font-bold uppercase tracking-wider">Secure Login</span>
-                    </div>
+                <h2 className="text-3xl font-black text-white mb-3">
+                  Welcome <span className="text-gradient">Back</span>
+                </h2>
+                <p className="text-gray-400">
+                  Sign in to your Vertex account to continue your fitness journey
+                </p>
+              </div>
 
-                    <h2 className="text-3xl font-black text-white mb-3">
-                      Welcome <span className="text-gradient">Back</span>
-                    </h2>
-                    <p className="text-gray-400">
-                      Sign in to your Vertex account to continue your fitness journey
-                    </p>
-                  </div>
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3 animate-fade-in">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-400">{errorMessage}</p>
+                </div>
+              )}
 
-                  {/* Login Form */}
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Email Field */}
-                    <div className="group">
-                      <label className="block text-sm font-bold text-gray-300 mb-3 uppercase tracking-wider">
-                        Email Address
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
-                        <Input
-                          type="email"
-                          name="email"
-                          placeholder="Enter your email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          required
-                          className="pl-12"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Password Field */}
-                    <div className="group">
-                      <label className="block text-sm font-bold text-gray-300 mb-3 uppercase tracking-wider">
-                        Password
-                      </label>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
-                        <Input
-                          type={showPassword ? 'text' : 'password'}
-                          name="password"
-                          placeholder="Enter your password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          required
-                          className="pl-12 pr-12"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary-500 transition-colors z-10"
-                        >
-                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Forgot Password */}
-                    <div className="text-right">
-                      <Link
-                        href="/auth/forgot-password"
-                        className="text-sm text-primary-400 hover:text-primary-300 font-medium transition-colors"
-                      >
-                        Forgot your password?
-                      </Link>
-                    </div>
-
-                    {/* Submit Button */}
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="btn-primary w-full btn-lg shadow-neon group relative overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      {isLoading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin mr-3" />
-                          <span className="relative z-10 font-black">SIGNING IN...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <Zap className="w-5 h-5 mr-3 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
-                          <span className="relative z-10 font-black">SIGN IN</span>
-                          <ArrowRight className="w-5 h-5 ml-3 relative z-10 group-hover:translate-x-2 transition-transform duration-300" />
-                        </>
-                      )}
-
-                      {/* Epic shine effect */}
-                      <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent transform translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                    </Button>
-                  </form>
-
-                  {/* Sign Up Link */}
-                  <div className="text-center mt-8 pt-6 border-t border-dark-700/50">
-                    <p className="text-gray-400 mb-4">
-                      Don't have an account yet?
-                    </p>
-                    <Link href="/auth/register">
-                      <Button variant="outline" className="btn-outline group">
-                        <span className="font-bold group-hover:text-white transition-colors">Create Account</span>
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                      </Button>
-                    </Link>
+              {/* Login Form */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-sm font-bold text-gray-300 uppercase tracking-wider">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="pl-12"
+                      placeholder="your.email@example.com"
+                    />
                   </div>
                 </div>
+
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <label htmlFor="password" className="block text-sm font-bold text-gray-300 uppercase tracking-wider">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="pl-12 pr-12"
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary-500 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Forgot Password */}
+                <div className="text-right">
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-sm text-primary-400 hover:text-primary-300 font-medium transition-colors"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full btn-primary btn-lg group"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3" />
+                      <span>Logging in...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-black tracking-wider">LOGIN</span>
+                      <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              {/* Sign Up Link */}
+              <div className="text-center mt-8 pt-6 border-t border-dark-700/50">
+                <p className="text-gray-400 mb-4">
+                  Don't have an account yet?
+                </p>
+                <Link href="/auth/register">
+                  <Button variant="outline" className="btn-outline group">
+                    <span className="font-bold group-hover:text-white transition-colors">Create Account</span>
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

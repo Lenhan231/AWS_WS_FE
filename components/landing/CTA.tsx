@@ -7,19 +7,14 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 
 export function CTA() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
 
   const handleStartJourney = () => {
-    if (isAuthenticated) {
-      // Get user from store to check role
-      const { user } = useAuthStore.getState();
-
-      if (user?.role === 'CLIENT_USER') {
-        // Client users stay on homepage or go to profile
-        router.push('/profile');
+    if (isAuthenticated && user) {
+      if (user.role === 'CLIENT_USER') {
+        router.push('/');
       } else {
-        // Other roles go to dashboard
         router.push('/dashboard');
       }
     } else {
@@ -93,9 +88,9 @@ export function CTA() {
 
           {/* Epic CTA Buttons */}
           <div className="flex flex-col lg:flex-row gap-8 justify-center items-center animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <Button
+            <button
               onClick={handleStartJourney}
-              className="btn-primary btn-lg group px-16 py-6 text-xl shadow-neon-lg relative overflow-hidden transform-3d hover:scale-105 hover:-translate-y-2"
+              className="inline-flex items-center justify-center btn-primary btn-lg group px-16 py-6 text-xl shadow-neon-lg relative overflow-hidden transform-3d hover:scale-105 hover:-translate-y-2"
             >
               {/* Animated background layers */}
               <div className="absolute inset-0 bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -103,16 +98,16 @@ export function CTA() {
 
               <Target className="w-7 h-7 mr-4 relative z-10 group-hover:rotate-12 transition-transform duration-500" />
               <span className="relative z-10 font-black tracking-wider">
-                {isAuthenticated ? 'GO TO DASHBOARD' : 'START YOUR JOURNEY'}
+                {isAuthenticated ? (user?.role === 'CLIENT_USER' ? 'EXPLORE MORE' : 'GO TO DASHBOARD') : 'START YOUR JOURNEY'}
               </span>
               <ArrowRight className="w-7 h-7 ml-4 relative z-10 group-hover:translate-x-3 transition-transform duration-300" />
 
               {/* Epic shine effect */}
               <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent transform translate-x-[-300%] group-hover:translate-x-[300%] transition-transform duration-1200" />
-            </Button>
+            </button>
 
             <Link href="/offers">
-              <Button className="btn-outline btn-lg group px-16 py-6 text-xl relative overflow-hidden transform-3d hover:scale-105 hover:-translate-y-2">
+              <button className="inline-flex items-center justify-center btn-outline btn-lg group px-16 py-6 text-xl relative overflow-hidden transform-3d hover:scale-105 hover:-translate-y-2">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-800 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 <div className="relative z-10 flex items-center">
@@ -123,7 +118,7 @@ export function CTA() {
                   <span className="font-black tracking-wider group-hover:text-white transition-colors">EXPLORE OFFERS</span>
                   <ArrowRight className="w-7 h-7 ml-4 group-hover:translate-x-3 transition-transform duration-300" />
                 </div>
-              </Button>
+              </button>
             </Link>
           </div>
 

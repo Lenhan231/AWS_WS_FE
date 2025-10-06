@@ -30,114 +30,45 @@ const publicRoutes = [
   '/terms',
 ];
 
-// Define API routes that require authentication
-const protectedApiRoutes = [
-  '/api/auth/logout',
-  '/api/users',
-  '/api/gyms',
-  '/api/trainers',
-  '/api/offers',
-  '/api/reviews',
-  '/api/admin',
-];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Allow all Next.js internal routes
+  if (pathname.startsWith('/_next') || pathname.startsWith('/static') || pathname === '/favicon.ico') {
+    return NextResponse.next();
+  }
+
   // Check if the route is public
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+  const isPublicRoute = publicRoutes.some(route => {
+    if (route === pathname) return true;
+    if (pathname.startsWith(route + '/')) return true;
+    return false;
+  });
+
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
   // Check if it's an API route
   if (pathname.startsWith('/api/')) {
-    // For API routes, we'll handle auth in the API handlers
-    // This middleware just ensures the route exists
     return NextResponse.next();
   }
 
-  // Get user role from token (this would be implemented with JWT verification)
-  const userRole = getUserRoleFromToken(request);
-  
-  if (!userRole) {
-    // Redirect to login if not authenticated
-    return NextResponse.redirect(new URL('/auth/login', request.url));
-  }
+  // For protected routes, check token exists (we'll validate role on client-side)
+  const token = request.cookies.get('auth_token')?.value;
 
-  // Check if user has access to the protected route
-  const requiredRoles = getRequiredRolesForRoute(pathname);
-  
-  if (requiredRoles && !requiredRoles.includes(userRole)) {
-    // Redirect to appropriate dashboard based on user role
-    const dashboardPath = getDashboardPathForRole(userRole);
-    return NextResponse.redirect(new URL(dashboardPath, request.url));
-  }
-
-  return NextResponse.next();
-}
-
-function getUserRoleFromToken(request: NextRequest): string | null {
-  // TODO: Implement JWT token verification
-  // For now, we'll check for a mock token in cookies or headers
-  
-  const token = request.cookies.get('auth_token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '');
-  
+  // If no token, redirect to login
   if (!token) {
-    return null;
+    const url = new URL('/auth/login', request.url);
+    return NextResponse.redirect(url);
   }
 
-  // Mock implementation - in real app, verify JWT and extract role
-  try {
-    // This would be replaced with actual JWT verification
-    const mockUser = JSON.parse(atob(token));
-    return mockUser.role || null;
-  } catch {
-    return null;
-  }
-}
-
-function getRequiredRolesForRoute(pathname: string): string[] | null {
-  // Check exact matches first
-  if (protectedRoutes[pathname as keyof typeof protectedRoutes]) {
-    return protectedRoutes[pathname as keyof typeof protectedRoutes];
-  }
-
-  // Check for dynamic routes (e.g., /gyms/[id]/edit)
-  for (const [route, roles] of Object.entries(protectedRoutes)) {
-    if (pathname.startsWith(route)) {
-      return roles;
-    }
-  }
-
-  return null;
-}
-
-function getDashboardPathForRole(role: string): string {
-  switch (role) {
-    case 'ADMIN':
-      return '/dashboard/admin';
-    case 'GYM_STAFF':
-      return '/dashboard/gym-staff';
-    case 'PT_USER':
-      return '/dashboard/pt';
-    case 'CLIENT_USER':
-      return '/dashboard';
-    default:
-      return '/dashboard';
-  }
+  // If token exists, allow access (role-based routing handled by client-side)
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
-

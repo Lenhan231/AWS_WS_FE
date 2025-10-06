@@ -21,7 +21,8 @@ import {
   Trophy,
   Zap,
   Shield,
-  CheckCircle
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -29,6 +30,7 @@ export default function RegisterPage() {
   const { register, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -41,17 +43,17 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      // Show error in UI instead of alert
-      console.error('Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
     // Validate password strength
     if (formData.password.length < 8) {
-      console.error('Password must be at least 8 characters long');
+      setErrorMessage('Password must be at least 8 characters long');
       return;
     }
 
@@ -94,9 +96,8 @@ export default function RegisterPage() {
       }
     } catch (error: any) {
       console.error('Registration failed:', error);
-      // Show error in UI instead of alert
-      const errorMessage = error?.response?.data?.message || error?.message || 'Registration failed. Please try again.';
-      console.error(errorMessage);
+      const message = error?.response?.data?.message || error?.message || 'Registration failed. Please try again.';
+      setErrorMessage(message);
     }
   };
 
@@ -105,6 +106,8 @@ export default function RegisterPage() {
       ...prev,
       [e.target.name]: e.target.value
     }));
+    // Clear error when user starts typing
+    if (errorMessage) setErrorMessage('');
   };
 
   return (
@@ -181,228 +184,222 @@ export default function RegisterPage() {
         </div>
 
         {/* Right Side - Registration Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
-          <div className="w-full max-w-md animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="w-full max-w-md">
 
-            {/* Form Container với Epic 3D Effects */}
-            <div className="relative perspective-1000">
-              <div className="glass-card rounded-3xl p-8 lg:p-10 shadow-3d-lg border border-primary-600/30 transform-3d hover:scale-[1.02] transition-all duration-500">
-                {/* Animated border */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-600 rounded-3xl opacity-20 blur-xl animate-border-flow" />
+            {/* Form Card */}
+            <div className="glass-card rounded-3xl p-8 sm:p-12 border border-primary-600/20 shadow-3d">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-green-500/50 mb-6 shadow-glow">
+                  <Star className="w-4 h-4 text-green-500" />
+                  <span className="text-sm text-green-400 font-bold uppercase tracking-wider">Join Elite Community</span>
+                </div>
 
-                <div className="relative">
-                  {/* Header */}
-                  <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-green-500/50 mb-6 shadow-glow">
-                      <Star className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-green-400 font-bold uppercase tracking-wider">Join Elite Community</span>
-                    </div>
+                <h2 className="text-3xl font-black text-white mb-3">
+                  Create Your <span className="text-gradient">Account</span>
+                </h2>
+                <p className="text-gray-400">
+                  Start your fitness transformation journey with Vertex
+                </p>
+              </div>
 
-                    <h2 className="text-3xl font-black text-white mb-3">
-                      Create Your <span className="text-gradient">Account</span>
-                    </h2>
-                    <p className="text-gray-400">
-                      Start your fitness transformation journey with Vertex
-                    </p>
-                  </div>
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3 animate-fade-in">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-400">{errorMessage}</p>
+                </div>
+              )}
 
-                  {/* Registration Form */}
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Name Fields */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
-                          First Name
-                        </label>
-                        <div className="relative">
-                          <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
-                          <Input
-                            type="text"
-                            name="firstName"
-                            placeholder="John"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                            required
-                            className="pl-12"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
-                          Last Name
-                        </label>
-                        <Input
-                          type="text"
-                          name="lastName"
-                          placeholder="Doe"
-                          value={formData.lastName}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
-                        Email
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
-                        <Input
-                          type="email"
-                          name="email"
-                          placeholder="john@example.com"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          required
-                          className="pl-12"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                      <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
-                        Phone
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
-                        <Input
-                          type="tel"
-                          name="phoneNumber"
-                          placeholder="+1 (555) 123-4567"
-                          value={formData.phoneNumber}
-                          onChange={handleInputChange}
-                          className="pl-12"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Role Selection */}
-                    <div>
-                      <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
-                        I am a...
-                      </label>
-                      <Select
-                        name="role"
-                        value={formData.role}
+              {/* Registration Form */}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
+                      First Name
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
+                      <Input
+                        type="text"
+                        name="firstName"
+                        placeholder="John"
+                        value={formData.firstName}
                         onChange={handleInputChange}
                         required
-                      >
-                        <option value="CLIENT_USER">Fitness Enthusiast</option>
-                        <option value="PT_USER">Personal Trainer</option>
-                        <option value="GYM_STAFF">Gym Owner/Staff</option>
-                      </Select>
-                    </div>
-
-                    {/* Password Fields */}
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
-                          Password
-                        </label>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
-                          <Input
-                            type={showPassword ? 'text' : 'password'}
-                            name="password"
-                            placeholder="Create password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            required
-                            className="pl-12 pr-12"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary-500 transition-colors z-10"
-                          >
-                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
-                          Confirm Password
-                        </label>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
-                          <Input
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            name="confirmPassword"
-                            placeholder="Confirm password"
-                            value={formData.confirmPassword}
-                            onChange={handleInputChange}
-                            required
-                            className="pl-12 pr-12"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary-500 transition-colors z-10"
-                          >
-                            {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Terms Checkbox */}
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        id="terms"
-                        required
-                        className="w-5 h-5 rounded border-2 border-primary-600/50 bg-dark-800/50 text-primary-600 focus:ring-primary-600 focus:ring-2 mt-0.5"
+                        className="pl-12"
                       />
-                      <label htmlFor="terms" className="text-sm text-gray-400 leading-relaxed">
-                        I agree to the <Link href="/terms" className="text-primary-400 hover:text-primary-300 font-bold transition-colors">Terms of Service</Link> and <Link href="/privacy" className="text-primary-400 hover:text-primary-300 font-bold transition-colors">Privacy Policy</Link>
-                      </label>
                     </div>
+                  </div>
 
-                    {/* Epic Submit Button */}
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="btn-primary w-full btn-lg shadow-neon-lg group relative overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/20 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-
-                      {isLoading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin mr-3" />
-                          <span className="relative z-10 font-black">CREATING ACCOUNT...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <Target className="w-6 h-6 mr-3 relative z-10 group-hover:rotate-12 transition-transform duration-500" />
-                          <span className="relative z-10 font-black text-lg">START MY JOURNEY</span>
-                          <ArrowRight className="w-6 h-6 ml-3 relative z-10 group-hover:translate-x-3 transition-transform duration-300" />
-                        </>
-                      )}
-
-                      {/* Epic shine effect */}
-                      <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent transform translate-x-[-300%] group-hover:translate-x-[300%] transition-transform duration-1200" />
-                    </Button>
-                  </form>
-
-                  {/* Sign In Link */}
-                  <div className="text-center mt-8 pt-6 border-t border-dark-700/50">
-                    <p className="text-gray-400 mb-4">
-                      Already have an account?
-                    </p>
-                    <Link href="/auth/login">
-                      <Button variant="outline" className="btn-outline group">
-                        <span className="font-bold group-hover:text-white transition-colors">Sign In Instead</span>
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                      </Button>
-                    </Link>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
+                      Last Name
+                    </label>
+                    <Input
+                      type="text"
+                      name="lastName"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                 </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
+                    <Input
+                      type="email"
+                      name="email"
+                      placeholder="john@example.com"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      className="pl-12"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
+                    Phone
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
+                    <Input
+                      type="tel"
+                      name="phoneNumber"
+                      placeholder="+1 (555) 123-4567"
+                      value={formData.phoneNumber}
+                      onChange={handleInputChange}
+                      className="pl-12"
+                    />
+                  </div>
+                </div>
+
+                {/* Role Selection */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
+                    I am a...
+                  </label>
+                  <Select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="CLIENT_USER">Fitness Enthusiast</option>
+                    <option value="PT_USER">Personal Trainer</option>
+                    <option value="GYM_STAFF">Gym Owner/Staff</option>
+                  </Select>
+                </div>
+
+                {/* Password Fields */}
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        placeholder="Create password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        required
+                        className="pl-12 pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary-500 transition-colors z-10"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wider">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary-500 z-10" />
+                      <Input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        name="confirmPassword"
+                        placeholder="Confirm password"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        required
+                        className="pl-12 pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary-500 transition-colors z-10"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Terms Checkbox */}
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    required
+                    className="w-5 h-5 rounded border-2 border-primary-600/50 bg-dark-800/50 text-primary-600 focus:ring-primary-600 focus:ring-2 mt-0.5"
+                  />
+                  <label htmlFor="terms" className="text-sm text-gray-400 leading-relaxed">
+                    I agree to the <Link href="/terms" className="text-primary-400 hover:text-primary-300 font-bold transition-colors">Terms of Service</Link> and <Link href="/privacy" className="text-primary-400 hover:text-primary-300 font-bold transition-colors">Privacy Policy</Link>
+                  </label>
+                </div>
+
+                {/* Epic Submit Button */}
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full btn-primary btn-lg group"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3" />
+                      <span>Creating account...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-black tracking-wider">CREATE ACCOUNT</span>
+                      <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              {/* Sign In Link */}
+              <div className="text-center mt-8 pt-6 border-t border-dark-700/50">
+                <p className="text-gray-400 mb-4">
+                  Already have an account?
+                </p>
+                <Link href="/auth/login">
+                  <Button variant="outline" className="btn-outline group">
+                    <span className="font-bold group-hover:text-white transition-colors">Sign In Instead</span>
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
