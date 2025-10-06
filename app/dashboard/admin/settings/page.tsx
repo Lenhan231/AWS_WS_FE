@@ -1,5 +1,4 @@
-  );
-}
+
 'use client';
 
 import { Construction, ArrowLeft } from 'lucide-react';
