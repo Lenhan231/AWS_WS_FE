@@ -53,13 +53,42 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
+        // Log the full error for debugging
+        console.error('API Error:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          url: error.config?.url
+        });
+
         if (error.response?.status === 401) {
           // Handle unauthorized access
           if (typeof window !== 'undefined') {
             localStorage.removeItem('auth_token');
-            window.location.href = '/auth/login';
+
+            // Delete cookie
+            document.cookie = 'auth_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+
+            // Only redirect if not already on login page
+            if (!window.location.pathname.includes('/auth/login')) {
+              window.location.href = '/auth/login';
+            }
           }
         }
+
+        // Handle 500 errors (like Sequelize errors from backend)
+        if (error.response?.status === 500) {
+          console.error('🔥 Backend Server Error:', error.response.data);
+
+          // If it's an auth endpoint error, clear the token
+          if (error.config?.url?.includes('/auth/')) {
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('auth_token');
+              document.cookie = 'auth_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+            }
+          }
+        }
+
         return Promise.reject(error);
       }
     );

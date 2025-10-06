@@ -211,7 +211,7 @@ export const useAuthStore = create<AuthState>()(
       resetPassword: async (email: string, code: string, newPassword: string) => {
         set({ isLoading: true, error: null });
         try {
-          await cognito.resetPassword(email, code, newPassword);
+          await cognito.forgotPasswordSubmit(email, code, newPassword);
           set({ isLoading: false });
         } catch (error) {
           set({
@@ -240,13 +240,36 @@ export const useAuthStore = create<AuthState>()(
             const response = await api.auth.me();
             if (response.success && response.data) {
               const userData = response.data as any;
-              set({
-                user: userData,
-                isAuthenticated: true,
-                isLoading: false
-              });
+
+              // Validate user data before setting
+              if (userData && userData.id && userData.email) {
+                set({
+                  user: {
+                    id: userData.id.toString(),
+                    email: userData.email,
+                    firstName: userData.firstName || '',
+                    lastName: userData.lastName || '',
+                    phoneNumber: userData.phoneNumber || '',
+                    role: userData.role || 'CLIENT_USER',
+                    profileImageUrl: userData.profileImageUrl,
+                    createdAt: userData.createdAt || new Date().toISOString(),
+                    updatedAt: userData.updatedAt || new Date().toISOString(),
+                  },
+                  isAuthenticated: true,
+                  isLoading: false
+                });
+              } else {
+                // Invalid user data, clear token
+                console.warn('⚠️ Invalid user data received from API');
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('auth_token');
+                  deleteCookie('auth_token');
+                }
+                set({ user: null, isAuthenticated: false, isLoading: false });
+              }
             } else {
-              // Token invalid, clear it
+              // Token invalid or API error, clear it
+              console.warn('⚠️ Auth verification failed:', response.error);
               if (typeof window !== 'undefined') {
                 localStorage.removeItem('auth_token');
                 deleteCookie('auth_token');
@@ -257,7 +280,15 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false });
           }
         } catch (error) {
-          console.error('Auth initialization error:', error);
+          // Catch any errors including backend Sequelize errors
+          console.error('❌ Auth initialization error:', error);
+
+          // Clear invalid token
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth_token');
+            deleteCookie('auth_token');
+          }
+
           set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
