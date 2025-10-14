@@ -60,7 +60,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.auth.login(email, password);
+          const response = await api.auth.login({ email, password });
 
           if (response.success && response.data) {
             const { user, token } = response.data as any;

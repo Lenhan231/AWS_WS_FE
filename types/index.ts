@@ -175,6 +175,9 @@ export interface SearchFilters {
   minRating?: number;
   offerType?: OfferType;
   searchQuery?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   gymId?: string;
   ptUserId?: string;
   page?: number;
@@ -191,6 +194,72 @@ export interface SearchResult<T> {
   totalPages: number;
   last: boolean;
   first: boolean;
+}
+
+export interface NearbySearchLocation {
+  latitude: number;
+  longitude: number;
+  address: string;
+  city?: string;
+  formattedAddress?: string;
+}
+
+export interface NearbyGymResult {
+  id: number | string;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  phoneNumber?: string;
+  email?: string;
+  website?: string;
+  averageRating?: number;
+  ratingCount?: number;
+  location: NearbySearchLocation;
+  distance: number;
+  type: 'gym';
+}
+
+export interface NearbyPTResult {
+  id: number | string;
+  name: string;
+  bio?: string;
+  specializations?: string;
+  certifications?: string;
+  experience?: number;
+  hourlyRate?: number;
+  availability?: string;
+  averageRating?: number;
+  ratingCount?: number;
+  location: NearbySearchLocation;
+  distance: number;
+  type: 'pt';
+}
+
+export type NearbySearchResult = NearbyGymResult | NearbyPTResult;
+
+export interface NearbySearchResponse {
+  results: NearbySearchResult[];
+  pagination: {
+    page: number;
+    size: number;
+    total: number;
+    totalPages: number;
+  };
+  searchCriteria: {
+    latitude: number;
+    longitude: number;
+    radius: number;
+    type?: string;
+  };
+}
+
+export interface NearbySearchParams {
+  lat: number;
+  lon: number;
+  radius: number;
+  type?: 'gym' | 'pt';
+  page?: number;
+  size?: number;
 }
 
 // API Response Types
@@ -225,6 +294,35 @@ export interface RegisterData {
   phoneNumber?: string;
   role: UserRole;
   profileImageUrl?: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface LoginResponse {
+  user: User;
+  token: string;
+  refreshToken?: string;
+}
+
+export interface RegisterResponse {
+  user: User;
+  token?: string;
+  requiresConfirmation?: boolean;
+}
+
+export interface PresignedUrlResponse {
+  uploadUrl: string;
+  fileKey: string;
+  publicUrl: string;
+  expiresIn: number;
+}
+
+export interface ModerateOfferPayload {
+  decision: 'approve' | 'reject';
+  reason?: string;
 }
 
 // Modal Types

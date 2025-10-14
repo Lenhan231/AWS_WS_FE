@@ -1,24 +1,71 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import type {
+  ApiResponse,
+  ChangePasswordPayload,
+  LoginCredentials,
+  LoginResponse,
+  ModerateOfferPayload,
+  NearbySearchParams,
+  NearbySearchResponse,
+  PaginatedResponse,
+  PresignedUrlResponse,
+  RegisterData,
+  RegisterResponse,
+  SearchFilters,
+  Gym,
+  Offer,
+  PersonalTrainer,
+  Rating,
+  Report,
+  User,
+} from '@/types';
 
-// Types for API responses
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
+type PaginationParams = {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDirection?: 'ASC' | 'DESC';
+};
 
-export interface PaginatedResponse<T> {
-  content: T[];
-  pageNumber: number;
-  pageSize: number;
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  first: boolean;
-}
+type RatingQueryParams = PaginationParams & {
+  minRating?: number;
+};
+
+type ReportQueryParams = PaginationParams & {
+  status?: string;
+};
+
+type GymQueryParams = PaginationParams &
+  Partial<
+    Pick<
+      SearchFilters,
+      | 'latitude'
+      | 'longitude'
+      | 'radiusKm'
+      | 'minRating'
+      | 'searchQuery'
+      | 'city'
+      | 'state'
+      | 'country'
+    >
+  >;
+
+type OfferQueryParams = PaginationParams &
+  Partial<
+    Pick<
+      SearchFilters,
+      | 'offerType'
+      | 'minPrice'
+      | 'maxPrice'
+      | 'minRating'
+      | 'searchQuery'
+      | 'gymId'
+      | 'ptUserId'
+    >
+  >;
 
 class ApiClient {
-  private client: AxiosInstance;
+  private readonly client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
@@ -33,59 +80,45 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor to add auth token
     this.client.interceptors.request.use(
       (config) => {
         if (typeof window !== 'undefined') {
           const token = localStorage.getItem('auth_token');
           if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers = config.headers ?? {};
+            (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
           }
         }
         return config;
       },
-      (error) => {
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error)
     );
 
-    // Response interceptor to handle common errors
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => {
-        // Log the full error for debugging
+      (error: AxiosError<{ message?: string; error?: string }>) => {
         console.error('API Error:', {
           message: error.message,
           response: error.response?.data,
           status: error.response?.status,
-          url: error.config?.url
+          url: error.config?.url,
         });
 
-        if (error.response?.status === 401) {
-          // Handle unauthorized access
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('auth_token');
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
+          localStorage.removeItem('auth_token');
+          document.cookie = 'auth_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
 
-            // Delete cookie
-            document.cookie = 'auth_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
-
-            // Only redirect if not already on login page
-            if (!window.location.pathname.includes('/auth/login')) {
-              window.location.href = '/auth/login';
-            }
+          if (!window.location.pathname.includes('/auth/login')) {
+            window.location.href = '/auth/login';
           }
         }
 
-        // Handle 500 errors (like Sequelize errors from backend)
         if (error.response?.status === 500) {
           console.error('🔥 Backend Server Error:', error.response.data);
 
-          // If it's an auth endpoint error, clear the token
-          if (error.config?.url?.includes('/auth/')) {
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem('auth_token');
-              document.cookie = 'auth_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
-            }
+          if (error.config?.url?.includes('/auth/') && typeof window !== 'undefined') {
+            localStorage.removeItem('auth_token');
+            document.cookie = 'auth_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
           }
         }
 
@@ -94,160 +127,167 @@ class ApiClient {
     );
   }
 
-  // Generic request methods
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response: AxiosResponse<T> = await this.client.get(url, config);
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (error: any) {
-      return this.handleError(error);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return this.handleError<T>(error);
     }
   }
 
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response: AxiosResponse<T> = await this.client.post(url, data, config);
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (error: any) {
-      return this.handleError(error);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return this.handleError<T>(error);
     }
   }
 
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response: AxiosResponse<T> = await this.client.put(url, data, config);
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (error: any) {
-      return this.handleError(error);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return this.handleError<T>(error);
     }
   }
 
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response: AxiosResponse<T> = await this.client.delete(url, config);
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (error: any) {
-      return this.handleError(error);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return this.handleError<T>(error);
     }
   }
 
-  private handleError(error: any): ApiResponse<any> {
-    const message = error.response?.data?.message || error.message || 'An error occurred';
+  private handleError<T>(error: unknown): ApiResponse<T> {
+    const axiosError = error as AxiosError<{ message?: string; error?: string }>;
+    const message =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      axiosError.message ||
+      'An error occurred';
+
     return {
       success: false,
       error: message,
+      message,
     };
   }
 }
 
 const apiClient = new ApiClient();
 
-// 🔐 Authentication API
-export const authApi = {
-  login: (email: string, password: string) =>
-    apiClient.post('/auth/login', { email, password }),
-  register: (data: any) => apiClient.post('/auth/register', data),
-  me: () => apiClient.get('/auth/me'),
-  changePassword: (currentPassword: string, newPassword: string) =>
-    apiClient.post('/auth/change-password', { currentPassword, newPassword }),
+const authApi = {
+  login: (credentials: LoginCredentials) =>
+    apiClient.post<LoginResponse>('/auth/login', credentials),
+  register: (data: RegisterData) => apiClient.post<RegisterResponse>('/auth/register', data),
+  me: () => apiClient.get<User>('/auth/me'),
+  changePassword: (payload: ChangePasswordPayload) =>
+    apiClient.post<{ message: string }>('/auth/change-password', payload),
 };
 
-// 🏢 Gym API
-export const gymApi = {
-  create: (data: any) => apiClient.post('/gyms', data),
-  update: (gymId: string, data: any) => apiClient.put(`/gyms/${gymId}`, data),
-  getById: (gymId: string) => apiClient.get(`/gyms/${gymId}`),
-  getAll: (params?: any) => apiClient.get('/gyms', { params }),
-  search: (params: any) => apiClient.get('/gyms/search', { params }),
+const gymApi = {
+  create: (data: Partial<Gym>) => apiClient.post<Gym>('/gyms', data),
+  update: (gymId: string, data: Partial<Gym>) => apiClient.put<Gym>(`/gyms/${gymId}`, data),
+  getById: (gymId: string) => apiClient.get<Gym>(`/gyms/${gymId}`),
+  getAll: (params?: GymQueryParams) =>
+    apiClient.get<PaginatedResponse<Gym>>('/gyms', { params }),
+  search: (params: Partial<SearchFilters>) =>
+    apiClient.get<PaginatedResponse<Gym>>('/gyms/search', { params }),
   assignPT: (gymId: string, ptUserId: string) =>
-    apiClient.post(`/gyms/${gymId}/assign-pt`, { ptUserId }),
+    apiClient.post<{ message: string }>(`/gyms/${gymId}/assign-pt`, { ptUserId }),
   getPTAssociations: (gymId: string) =>
-    apiClient.get(`/gyms/${gymId}/pt-associations`),
-  approvePTAssociation: (id: string) =>
-    apiClient.put(`/gyms/pt-associations/${id}/approve`),
-  rejectPTAssociation: (id: string) =>
-    apiClient.put(`/gyms/pt-associations/${id}/reject`),
+    apiClient.get<PaginatedResponse<unknown>>(`/gyms/${gymId}/pt-associations`),
+  approvePTAssociation: (associationId: string) =>
+    apiClient.put<{ message: string }>(`/gyms/pt-associations/${associationId}/approve`),
+  rejectPTAssociation: (associationId: string) =>
+    apiClient.put<{ message: string }>(`/gyms/pt-associations/${associationId}/reject`),
 };
 
-// 💪 PT User API
-export const ptApi = {
-  create: (data: any) => apiClient.post('/pt-users', data),
-  update: (ptUserId: string, data: any) => apiClient.put(`/pt-users/${ptUserId}`, data),
-  getById: (ptUserId: string) => apiClient.get(`/pt-users/${ptUserId}`),
-  getAll: (params?: any) => apiClient.get('/pt-users', { params }),
+const ptUsersApi = {
+  create: (data: Partial<PersonalTrainer>) => apiClient.post<PersonalTrainer>('/pt-users', data),
+  update: (ptUserId: string, data: Partial<PersonalTrainer>) =>
+    apiClient.put<PersonalTrainer>(`/pt-users/${ptUserId}`, data),
+  getById: (ptUserId: string) => apiClient.get<PersonalTrainer>(`/pt-users/${ptUserId}`),
+  getAll: (params?: Partial<SearchFilters>) =>
+    apiClient.get<PaginatedResponse<PersonalTrainer>>('/pt-users', { params }),
   getGymAssociations: (ptUserId: string) =>
-    apiClient.get(`/pt-users/${ptUserId}/gym-associations`),
+    apiClient.get<PaginatedResponse<unknown>>(`/pt-users/${ptUserId}/gym-associations`),
 };
 
-// 🎯 Offer API
-export const offerApi = {
-  create: (data: any) => apiClient.post('/offers', data),
-  update: (offerId: string, data: any) => apiClient.put(`/offers/${offerId}`, data),
-  getById: (offerId: string) => apiClient.get(`/offers/${offerId}`),
-  getAll: (params?: any) => apiClient.get('/offers', { params }),
+const offerApi = {
+  create: (data: Partial<Offer>) => apiClient.post<Offer>('/offers', data),
+  update: (offerId: string, data: Partial<Offer>) =>
+    apiClient.put<Offer>(`/offers/${offerId}`, data),
+  getById: (offerId: string) => apiClient.get<Offer>(`/offers/${offerId}`),
+  getAll: (params?: OfferQueryParams) =>
+    apiClient.get<PaginatedResponse<Offer>>('/offers', { params }),
+  delete: (offerId: string) => apiClient.delete<{ message: string }>(`/offers/${offerId}`),
 };
 
-// 🔍 Search API
-export const searchApi = {
-  offers: (data: any) => apiClient.post('/search/offers', data),
-  offersQuery: (params: any) => apiClient.get('/search/offers', { params }),
-  nearby: (params: { lat: number; lon: number; radius: number; type?: 'gym' | 'pt'; page?: number; size?: number }) =>
-    apiClient.get('/search/nearby', { params }),
+const searchApi = {
+  searchOffers: (filters: Partial<SearchFilters>) =>
+    apiClient.post<PaginatedResponse<Offer>>('/search/offers', filters),
+  searchOffersByQuery: (params: Partial<SearchFilters>) =>
+    apiClient.get<PaginatedResponse<Offer>>('/search/offers', { params }),
+  nearby: (params: NearbySearchParams) =>
+    apiClient.get<NearbySearchResponse>('/search/nearby', { params }),
 };
 
-// ⭐ Rating API
-export const ratingApi = {
-  create: (data: any) => apiClient.post('/ratings', data),
-  getByOffer: (offerId: string, params?: any) =>
-    apiClient.get(`/ratings/offer/${offerId}`, { params }),
+const ratingApi = {
+  create: (data: { offerId: string; rating: number; comment?: string }) =>
+    apiClient.post<Rating>('/ratings', data),
+  getByOffer: (offerId: string, params?: RatingQueryParams) =>
+    apiClient.get<PaginatedResponse<Rating>>(`/ratings/offer/${offerId}`, { params }),
 };
 
-// 🚩 Report API
-export const reportApi = {
-  create: (data: any) => apiClient.post('/reports', data),
+const reportApi = {
+  create: (data: { offerId: string; reason: string; details?: string }) =>
+    apiClient.post<Report>('/reports', data),
 };
 
-// 👨‍💼 Admin API
-export const adminApi = {
-  getPendingOffers: () => apiClient.get('/admin/offers/pending'),
-  moderateOffer: (offerId: string, decision: 'approve' | 'reject', reason?: string) =>
-    apiClient.put(`/admin/offers/${offerId}/moderate`, { decision, reason }),
-  getPendingReports: () => apiClient.get('/admin/reports/pending'),
-  getReports: (status?: string) => apiClient.get('/admin/reports', { params: { status } }),
-  resolveReport: (reportId: string) => apiClient.put(`/admin/reports/${reportId}/resolve`),
-  dismissReport: (reportId: string) => apiClient.put(`/admin/reports/${reportId}/dismiss`),
-  getPendingPTAssociations: () => apiClient.get('/admin/pt-associations/pending'),
+const adminApi = {
+  getPendingOffers: (params?: OfferQueryParams) =>
+    apiClient.get<PaginatedResponse<Offer>>('/admin/offers/pending', { params }),
+  moderateOffer: (offerId: string, payload: ModerateOfferPayload) =>
+    apiClient.put<Offer>(`/admin/offers/${offerId}/moderate`, payload),
+  getPendingReports: (params?: ReportQueryParams) =>
+    apiClient.get<PaginatedResponse<Report>>('/admin/reports/pending', { params }),
+  getReports: (params?: ReportQueryParams) =>
+    apiClient.get<PaginatedResponse<Report>>('/admin/reports', { params }),
+  resolveReport: (reportId: string) =>
+    apiClient.put<Report>(`/admin/reports/${reportId}/resolve`),
+  dismissReport: (reportId: string) =>
+    apiClient.put<Report>(`/admin/reports/${reportId}/dismiss`),
+  getPendingPTAssociations: (params?: PaginationParams) =>
+    apiClient.get<PaginatedResponse<unknown>>('/admin/pt-associations/pending', { params }),
 };
 
-// 📸 Media API
-export const mediaApi = {
+const mediaApi = {
   getPresignedUrl: (folder: string, fileExtension: string) =>
-    apiClient.get('/media/presigned-url', { params: { folder, fileExtension } }),
+    apiClient.get<PresignedUrlResponse>('/media/presigned-url', {
+      params: { folder, fileExtension },
+    }),
 };
 
-// Main API object
 export const api = {
   auth: authApi,
   gyms: gymApi,
-  pt: ptApi,
+  ptUsers: ptUsersApi,
   offers: offerApi,
   search: searchApi,
   ratings: ratingApi,
   reports: reportApi,
   admin: adminApi,
   media: mediaApi,
+  // Backwards compatibility for older imports
+  pt: ptUsersApi,
 };
+
+export type Api = typeof api;
 
 export default api;

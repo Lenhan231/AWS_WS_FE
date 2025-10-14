@@ -1,12 +1,5 @@
 import { api } from './api';
 
-export interface PresignedUrlResponse {
-  uploadUrl: string;
-  fileKey: string;
-  publicUrl: string;
-  expiresIn: number;
-}
-
 export class MediaUploadService {
   /**
    * Upload a file to S3 using pre-signed URL from backend
@@ -27,7 +20,7 @@ export class MediaUploadService {
         throw new Error('Failed to get pre-signed URL');
       }
       
-      const presignedData = response.data as PresignedUrlResponse;
+      const presignedData = response.data;
       const { uploadUrl, fileKey, publicUrl } = presignedData;
 
       // Upload file to S3
@@ -192,4 +185,3 @@ export class MediaUploadService {
 
 // Export singleton instance
 export const mediaUpload = MediaUploadService;
-

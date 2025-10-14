@@ -1,73 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { api } from '@/lib/api';
+import type {
+  NearbyGymResult,
+  NearbyPTResult,
+  NearbySearchParams,
+  NearbySearchResponse,
+  NearbySearchResult,
+} from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { MapPin, Navigation, Loader, Search, Star, Phone, Mail, Globe, Award, Briefcase, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
-// Complete type definitions matching backend API response
-interface Location {
-  latitude: number;
-  longitude: number;
-  address: string;
-  city?: string;
-  formattedAddress?: string;
-}
-
-interface GymResult {
-  id: number;
-  name: string;
-  description?: string;
-  logoUrl?: string;
-  phoneNumber?: string;
-  email?: string;
-  website?: string;
-  averageRating: number;
-  ratingCount: number;
-  location: Location;
-  distance: number;
-  type: 'gym';
-}
-
-interface PTResult {
-  id: number;
-  name: string;
-  bio?: string;
-  specializations?: string;
-  certifications?: string;
-  experience?: number;
-  hourlyRate?: number;
-  availability?: string;
-  averageRating: number;
-  ratingCount: number;
-  location: Location;
-  distance: number;
-  type: 'pt';
-}
-
-type NearbyResult = GymResult | PTResult;
-
-interface NearbySearchResponse {
-  results: NearbyResult[];
-  pagination: {
-    page: number;
-    size: number;
-    total: number;
-    totalPages: number;
-  };
-  searchCriteria: {
-    latitude: number;
-    longitude: number;
-    radius: number;
-    type: string;
-  };
-}
-
 interface NearbySearchProps {
-  onResultsFound?: (results: NearbyResult[]) => void;
+  onResultsFound?: (results: NearbySearchResult[]) => void;
 }
 
 export function NearbySearch({ onResultsFound }: NearbySearchProps) {
@@ -159,7 +108,7 @@ export function NearbySearch({ onResultsFound }: NearbySearchProps) {
     setError('');
 
     try {
-      const params: any = {
+      const params: NearbySearchParams = {
         lat,
         lon,
         radius: searchParams.radius,
@@ -174,7 +123,7 @@ export function NearbySearch({ onResultsFound }: NearbySearchProps) {
       const response = await api.search.nearby(params);
 
       if (response.success && response.data) {
-        const data = response.data as NearbySearchResponse;
+        const data = response.data;
         setSearchData(data);
 
         if (data.results.length === 0) {
@@ -241,163 +190,173 @@ export function NearbySearch({ onResultsFound }: NearbySearchProps) {
   };
 
   // Render gym card
-  const renderGymCard = (gym: GymResult) => (
-    <div className="glass-card rounded-xl p-5 border border-primary-600/20 hover:border-primary-600/40 transition-all duration-300 hover:shadow-glow group">
-      {/* Header with logo and type badge */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3 flex-1">
-          {gym.logoUrl ? (
-            <img src={gym.logoUrl} alt={gym.name} className="w-12 h-12 rounded-lg object-cover" />
-          ) : (
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center">
-              <MapPin className="w-6 h-6 text-white" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <h5 className="text-lg font-bold text-white truncate">{gym.name}</h5>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="px-2 py-0.5 rounded-full bg-blue-600/20 text-blue-400 text-xs font-bold uppercase">
-                GYM
-              </span>
-              <span className="text-primary-400 text-sm font-bold">
-                📍 {gym.distance.toFixed(2)} km
-              </span>
+  const renderGymCard = (gym: NearbyGymResult) => {
+    const averageRating = typeof gym.averageRating === 'number' ? gym.averageRating : 0;
+    const ratingCount = typeof gym.ratingCount === 'number' ? gym.ratingCount : 0;
+
+    return (
+      <div className="glass-card rounded-xl p-5 border border-primary-600/20 hover:border-primary-600/40 transition-all duration-300 hover:shadow-glow group">
+        {/* Header with logo and type badge */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3 flex-1">
+            {gym.logoUrl ? (
+              <img src={gym.logoUrl} alt={gym.name} className="w-12 h-12 rounded-lg object-cover" />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-white" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h5 className="text-lg font-bold text-white truncate">{gym.name}</h5>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="px-2 py-0.5 rounded-full bg-blue-600/20 text-blue-400 text-xs font-bold uppercase">
+                  GYM
+                </span>
+                <span className="text-primary-400 text-sm font-bold">
+                  📍 {gym.distance.toFixed(2)} km
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Description */}
-      {gym.description && (
-        <p className="text-sm text-gray-400 mb-3 line-clamp-2">{gym.description}</p>
-      )}
-
-      {/* Location */}
-      <div className="mb-3">
-        <p className="text-sm text-gray-400 flex items-start gap-2">
-          <MapPin className="w-4 h-4 text-primary-500 flex-shrink-0 mt-0.5" />
-          <span className="line-clamp-2">{gym.location.formattedAddress || gym.location.address}</span>
-        </p>
-      </div>
-
-      {/* Contact Info */}
-      <div className="space-y-2 mb-3">
-        {gym.phoneNumber && (
-          <p className="text-sm text-gray-400 flex items-center gap-2">
-            <Phone className="w-4 h-4 text-green-500" />
-            <a href={`tel:${gym.phoneNumber}`} className="hover:text-primary-400 transition-colors">
-              {gym.phoneNumber}
-            </a>
-          </p>
+        {/* Description */}
+        {gym.description && (
+          <p className="text-sm text-gray-400 mb-3 line-clamp-2">{gym.description}</p>
         )}
-        {gym.email && (
-          <p className="text-sm text-gray-400 flex items-center gap-2">
-            <Mail className="w-4 h-4 text-red-500" />
-            <a href={`mailto:${gym.email}`} className="hover:text-primary-400 transition-colors">
-              {gym.email}
-            </a>
-          </p>
-        )}
-        {gym.website && (
-          <p className="text-sm text-gray-400 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-blue-500" />
-            <a href={gym.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors truncate">
-              Visit Website
-            </a>
-          </p>
-        )}
-      </div>
 
-      {/* Rating */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
-        <div className="flex items-center gap-1">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-bold text-white">{gym.averageRating.toFixed(1)}</span>
-          <span className="text-sm text-gray-400">({gym.ratingCount} reviews)</span>
+        {/* Location */}
+        <div className="mb-3">
+          <p className="text-sm text-gray-400 flex items-start gap-2">
+            <MapPin className="w-4 h-4 text-primary-500 flex-shrink-0 mt-0.5" />
+            <span className="line-clamp-2">{gym.location.formattedAddress || gym.location.address}</span>
+          </p>
         </div>
-        <Link href={`/gyms/${gym.id}`}>
-          <Button size="sm" className="btn-primary text-xs group-hover:shadow-glow">
-            View Details
-          </Button>
-        </Link>
+
+        {/* Contact Info */}
+        <div className="space-y-2 mb-3">
+          {gym.phoneNumber && (
+            <p className="text-sm text-gray-400 flex items-center gap-2">
+              <Phone className="w-4 h-4 text-green-500" />
+              <a href={`tel:${gym.phoneNumber}`} className="hover:text-primary-400 transition-colors">
+                {gym.phoneNumber}
+              </a>
+            </p>
+          )}
+          {gym.email && (
+            <p className="text-sm text-gray-400 flex items-center gap-2">
+              <Mail className="w-4 h-4 text-red-500" />
+              <a href={`mailto:${gym.email}`} className="hover:text-primary-400 transition-colors">
+                {gym.email}
+              </a>
+            </p>
+          )}
+          {gym.website && (
+            <p className="text-sm text-gray-400 flex items-center gap-2">
+              <Globe className="w-4 h-4 text-blue-500" />
+              <a href={gym.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors truncate">
+                Visit Website
+              </a>
+            </p>
+          )}
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
+          <div className="flex items-center gap-1">
+            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+            <span className="text-sm font-bold text-white">{averageRating.toFixed(1)}</span>
+            <span className="text-sm text-gray-400">({ratingCount} reviews)</span>
+          </div>
+          <Link href={`/gyms/${gym.id}`}>
+            <Button size="sm" className="btn-primary text-xs group-hover:shadow-glow">
+              View Details
+            </Button>
+          </Link>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Render PT card
-  const renderPTCard = (pt: PTResult) => (
-    <div className="glass-card rounded-xl p-5 border border-primary-600/20 hover:border-primary-600/40 transition-all duration-300 hover:shadow-glow group">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h5 className="text-lg font-bold text-white mb-1">{pt.name}</h5>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-full bg-purple-600/20 text-purple-400 text-xs font-bold uppercase">
-              TRAINER
-            </span>
-            <span className="text-primary-400 text-sm font-bold">
-              📍 {pt.distance.toFixed(2)} km
-            </span>
+  const renderPTCard = (pt: NearbyPTResult) => {
+    const averageRating = typeof pt.averageRating === 'number' ? pt.averageRating : 0;
+    const ratingCount = typeof pt.ratingCount === 'number' ? pt.ratingCount : 0;
+
+    return (
+      <div className="glass-card rounded-xl p-5 border border-primary-600/20 hover:border-primary-600/40 transition-all duration-300 hover:shadow-glow group">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h5 className="text-lg font-bold text-white mb-1">{pt.name}</h5>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full bg-purple-600/20 text-purple-400 text-xs font-bold uppercase">
+                TRAINER
+              </span>
+              <span className="text-primary-400 text-sm font-bold">
+                📍 {pt.distance.toFixed(2)} km
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Bio */}
-      {pt.bio && (
-        <p className="text-sm text-gray-400 mb-3 line-clamp-2">{pt.bio}</p>
-      )}
+        {/* Bio */}
+        {pt.bio && (
+          <p className="text-sm text-gray-400 mb-3 line-clamp-2">{pt.bio}</p>
+        )}
 
-      {/* Details */}
-      <div className="space-y-2 mb-3">
-        {pt.specializations && (
-          <p className="text-sm text-gray-400 flex items-start gap-2">
-            <Award className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
-            <span>{pt.specializations}</span>
-          </p>
-        )}
-        {pt.certifications && (
-          <p className="text-sm text-gray-400 flex items-start gap-2">
-            <Award className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-            <span>{pt.certifications}</span>
-          </p>
-        )}
-        {pt.experience !== undefined && (
-          <p className="text-sm text-gray-400 flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-green-500" />
-            <span>{pt.experience} years experience</span>
-          </p>
-        )}
-        {pt.hourlyRate !== undefined && (
-          <p className="text-sm text-primary-400 flex items-center gap-2 font-bold">
-            <DollarSign className="w-4 h-4" />
-            <span>{pt.hourlyRate.toLocaleString()} VND/hour</span>
-          </p>
-        )}
-      </div>
-
-      {/* Location */}
-      <div className="mb-3">
-        <p className="text-sm text-gray-400 flex items-start gap-2">
-          <MapPin className="w-4 h-4 text-primary-500 flex-shrink-0 mt-0.5" />
-          <span className="line-clamp-2">{pt.location.formattedAddress || pt.location.address}</span>
-        </p>
-      </div>
-
-      {/* Rating */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
-        <div className="flex items-center gap-1">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-bold text-white">{pt.averageRating.toFixed(1)}</span>
-          <span className="text-sm text-gray-400">({pt.ratingCount} reviews)</span>
+        {/* Details */}
+        <div className="space-y-2 mb-3">
+          {pt.specializations && (
+            <p className="text-sm text-gray-400 flex items-start gap-2">
+              <Award className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <span>{pt.specializations}</span>
+            </p>
+          )}
+          {pt.certifications && (
+            <p className="text-sm text-gray-400 flex items-start gap-2">
+              <Award className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+              <span>{pt.certifications}</span>
+            </p>
+          )}
+          {typeof pt.experience === 'number' && (
+            <p className="text-sm text-gray-400 flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-green-500" />
+              <span>{pt.experience} years experience</span>
+            </p>
+          )}
+          {typeof pt.hourlyRate === 'number' && (
+            <p className="text-sm text-primary-400 flex items-center gap-2 font-bold">
+              <DollarSign className="w-4 h-4" />
+              <span>{pt.hourlyRate.toLocaleString()} VND/hour</span>
+            </p>
+          )}
         </div>
-        <Link href={`/trainers/${pt.id}`}>
-          <Button size="sm" className="btn-primary text-xs group-hover:shadow-glow">
-            View Profile
-          </Button>
-        </Link>
+
+        {/* Location */}
+        <div className="mb-3">
+          <p className="text-sm text-gray-400 flex items-start gap-2">
+            <MapPin className="w-4 h-4 text-primary-500 flex-shrink-0 mt-0.5" />
+            <span className="line-clamp-2">{pt.location.formattedAddress || pt.location.address}</span>
+          </p>
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
+          <div className="flex items-center gap-1">
+            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+            <span className="text-sm font-bold text-white">{averageRating.toFixed(1)}</span>
+            <span className="text-sm text-gray-400">({ratingCount} reviews)</span>
+          </div>
+          <Link href={`/trainers/${pt.id}`}>
+            <Button size="sm" className="btn-primary text-xs group-hover:shadow-glow">
+              View Profile
+            </Button>
+          </Link>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -512,7 +471,12 @@ export function NearbySearch({ onResultsFound }: NearbySearchProps) {
             <p className="font-bold text-white mb-1">Search Criteria:</p>
             <p>📍 Location: {userLocation.lat.toFixed(4)}, {userLocation.lon.toFixed(4)}</p>
             <p>📏 Radius: {searchData.searchCriteria.radius} km</p>
-            <p>🎯 Type: {searchData.searchCriteria.type === 'all' ? 'All (Gyms + Trainers)' : searchData.searchCriteria.type.toUpperCase()}</p>
+            <p>
+              🎯 Type:{' '}
+              {!searchData.searchCriteria.type || searchData.searchCriteria.type === 'all'
+                ? 'All (Gyms + Trainers)'
+                : searchData.searchCriteria.type.toUpperCase()}
+            </p>
           </div>
         )}
       </div>
@@ -532,7 +496,7 @@ export function NearbySearch({ onResultsFound }: NearbySearchProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {searchData.results.map((result) => (
               <div key={`${result.type}-${result.id}`}>
-                {result.type === 'gym' ? renderGymCard(result as GymResult) : renderPTCard(result as PTResult)}
+                {result.type === 'gym' ? renderGymCard(result) : renderPTCard(result)}
               </div>
             ))}
           </div>
