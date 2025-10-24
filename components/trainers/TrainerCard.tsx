@@ -30,47 +30,44 @@ export function TrainerCard({ trainer }: TrainerCardProps) {
   };
 
   return (
-    <div className="group perspective-1000 animate-fade-in-up">
-      <div className="glass-card rounded-3xl overflow-hidden shadow-3d-lg group-hover:shadow-neon-lg border border-primary-600/20 group-hover:border-primary-600/50 transform-3d transition-all duration-700 hover:scale-105 hover:-translate-y-6">
-        {/* Animated glow border */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-600 rounded-3xl opacity-0 group-hover:opacity-40 blur-xl transition duration-700" />
+    <div className="group animate-fade-in">
+      <div className="bg-dark-900 border border-dark-700 rounded-lg overflow-hidden hover:border-primary-600 transition-colors duration-150">
         
         {/* Profile Section with Epic Effects */}
         <div className="relative p-8 pb-4">
           <div className="text-center">
-            {/* 3D Profile Image */}
-            <div className="relative mx-auto w-32 h-32 perspective-1000 mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-800 rounded-full blur-xl opacity-0 group-hover:opacity-50 animate-glow-pulse" />
-              <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-primary-600/50 group-hover:border-primary-500 shadow-neon group-hover:shadow-neon-lg transition-all duration-500 transform-3d group-hover:scale-110 group-hover:rotate-6">
+            {/* Profile Image */}
+            <div className="relative mx-auto w-24 h-24 mb-4">
+              <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary-600">
                 <img
                   src={trainer.profileImageUrl || '/api/placeholder/200/200'}
                   alt={`${trainer.firstName} ${trainer.lastName}`}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
+                  className="w-full h-full object-cover"
                 />
               </div>
               
               {/* Availability Status */}
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                <div className="flex items-center gap-1 px-3 py-1 rounded-full glass-card border border-green-500/50 shadow-glow">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-xs text-green-400 font-bold uppercase">Available</span>
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-dark-900 border border-green-500">
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <span className="text-xs text-green-400 font-semibold">Available</span>
                 </div>
               </div>
             </div>
 
             {/* Name and Title */}
-            <h3 className="text-2xl font-black text-white mb-2 group-hover:text-gradient transition-all duration-300">
+            <h3 className="text-xl font-bold text-white mb-1">
               {trainer.firstName} {trainer.lastName}
             </h3>
             
-            <p className="text-primary-400 font-bold text-sm uppercase tracking-wider mb-4">
+            <p className="text-primary-400 text-sm mb-3">
               {trainer.specialties[0]} Specialist
             </p>
 
             {/* Experience Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-card border border-primary-600/30 mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-dark-800 border border-dark-700 mb-4">
               <Award className="w-4 h-4 text-primary-500" />
-              <span className="text-sm text-primary-400 font-bold">
+              <span className="text-xs text-primary-400">
                 {trainer.experience} Years Experience
               </span>
             </div>
@@ -79,75 +76,72 @@ export function TrainerCard({ trainer }: TrainerCardProps) {
 
         {/* Content */}
         <div className="px-8 pb-8">
-          {/* Rating with Epic Stars */}
-          <div className="flex items-center justify-center gap-2 mb-6">
+          {/* Rating */}
+          <div className="flex items-center justify-center gap-2 mb-4">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star 
                   key={i} 
-                  className={`w-4 h-4 transition-all duration-300 ${
+                  className={`w-4 h-4 ${
                     i < Math.floor(trainer.averageRating || 0) 
-                      ? 'text-yellow-500 fill-yellow-500 group-hover:scale-125' 
+                      ? 'text-yellow-500 fill-yellow-500' 
                       : 'text-gray-600'
                   }`}
-                  style={{ animationDelay: `${i * 0.1}s` }}
                 />
               ))}
             </div>
-            <span className="text-white font-bold">{trainer.averageRating}</span>
-            <span className="text-gray-500 text-sm">({trainer.totalRatings} reviews)</span>
+            <span className="text-white font-semibold">{trainer.averageRating}</span>
+            <span className="text-gray-500 text-sm">({trainer.totalRatings})</span>
           </div>
 
           {/* Bio */}
-          <p className="text-gray-500 text-sm mb-6 line-clamp-3 group-hover:text-gray-400 transition-colors leading-relaxed">
+          <p className="text-gray-400 text-sm mb-4 line-clamp-3">
             {trainer.bio}
           </p>
 
           {/* Specialties Pills */}
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
-            {trainer.specialties.slice(0, 3).map((specialty, i) => (
+          <div className="flex flex-wrap gap-2 justify-center mb-4">
+            {trainer.specialties.slice(0, 3).map((specialty) => (
               <span 
                 key={specialty}
-                className="text-xs px-3 py-1 rounded-full bg-primary-600/10 text-primary-400 border border-primary-600/30 font-bold uppercase tracking-wider hover:bg-primary-600/20 hover:scale-110 transition-all duration-300"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className="text-xs px-2 py-1 rounded bg-primary-600/20 text-primary-400 border border-primary-600"
               >
                 {specialty}
               </span>
             ))}
             {trainer.specialties.length > 3 && (
-              <span className="text-xs px-3 py-1 rounded-full bg-dark-700/50 text-gray-400 border border-dark-600 font-bold">
+              <span className="text-xs px-2 py-1 rounded bg-dark-800 text-gray-400 border border-dark-700">
                 +{trainer.specialties.length - 3}
               </span>
             )}
           </div>
 
           {/* Certifications */}
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-2 text-gray-600 group-hover:text-gray-500 transition-colors">
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-2 text-gray-500">
               <Award className="h-4 w-4 text-primary-500" />
-              <span className="text-sm font-medium">{trainer.certifications.length} certifications</span>
+              <span className="text-sm">{trainer.certifications.length} certifications</span>
             </div>
           </div>
 
           {/* Price and CTA */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="text-center">
-              <div className="text-3xl font-black text-gradient">
+              <div className="text-2xl font-bold text-primary-500">
                 ${trainer.hourlyRate}
               </div>
-              <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">per hour</div>
+              <div className="text-xs text-gray-500">per hour</div>
             </div>
             
-            <div className="flex gap-3">
-              <button className="flex-1 glass-card p-3 rounded-xl border border-primary-600/30 hover:border-primary-600 hover:shadow-glow transition-all duration-300 group/heart">
-                <Heart className="h-5 w-5 text-primary-500 mx-auto group-hover/heart:scale-125 transition-transform duration-300" />
+            <div className="flex gap-2">
+              <button className="flex-1 bg-dark-800 border border-dark-700 p-2 rounded-lg hover:border-primary-600 transition-colors">
+                <Heart className="h-5 w-5 text-primary-500 mx-auto" />
               </button>
               
               <Link href={`/trainers/${trainer.id}`} className="flex-[3]">
-                <Button className="btn-primary w-full shadow-glow group/btn relative overflow-hidden">
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-                  <Calendar className="w-4 h-4 mr-2 relative z-10" />
-                  <span className="relative z-10 font-bold">VIEW PROFILE</span>
+                <Button className="w-full">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <span>View Profile</span>
                 </Button>
               </Link>
             </div>

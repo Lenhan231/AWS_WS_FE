@@ -60,7 +60,7 @@ export default function RegisterPage() {
     try {
       console.log('Starting registration...');
 
-      await register({
+      const result = await register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -68,6 +68,13 @@ export default function RegisterPage() {
         phoneNumber: formData.phoneNumber,
         role: formData.role,
       });
+
+      // Check if confirmation is needed
+      if (result?.needsConfirmation) {
+        console.log('[REGISTER] Email confirmation required, redirecting...');
+        router.push(`/auth/confirm?email=${encodeURIComponent(formData.email)}`);
+        return;
+      }
 
       console.log('✅ Registration successful!');
 
@@ -112,25 +119,23 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden py-12">
-      {/* Epic Background */}
-      <div className="absolute inset-0 bg-mesh opacity-30" />
+      {/* Background */}
+      <div className="absolute inset-0 bg-mesh opacity-10" />
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 right-1/4 w-[700px] h-[700px] bg-primary-600/8 rounded-full blur-[160px] animate-float" />
-        <div className="absolute bottom-1/4 left-1/4 w-[600px] h-[600px] bg-primary-700/10 rounded-full blur-[140px] animate-float" style={{ animationDelay: '1.5s' }} />
-        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-primary-800/8 rounded-full blur-[120px] animate-float" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-primary-600/3 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-primary-700/3 rounded-full blur-[80px]" />
       </div>
 
       <div className="flex w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-        {/* Left Side - Epic Brand Showcase */}
-        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12 animate-fade-in-up">
+        {/* Left Side - Brand Showcase */}
+        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12">
           {/* Brand Logo */}
           <div className="mb-12">
             <Link href="/" className="inline-flex items-center group">
               <div className="relative">
-                <div className="absolute inset-0 bg-primary-600 blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
-                <div className="relative h-20 w-20 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 rounded-3xl flex items-center justify-center shadow-neon group-hover:shadow-neon-lg transition-all duration-500">
-                  <Dumbbell className="text-white h-10 w-10 group-hover:rotate-180 transition-transform duration-500" />
+                <div className="relative h-20 w-20 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 rounded-3xl flex items-center justify-center">
+                  <Dumbbell className="text-white h-10 w-10" />
                 </div>
               </div>
               <div className="ml-6">
@@ -153,29 +158,28 @@ export default function RegisterPage() {
                 <span className="text-gradient">TODAY</span>
               </h1>
               <p className="text-xl text-gray-400 leading-relaxed">
-                Join <span className="text-primary-400 font-black text-2xl">10,000+</span> warriors who have already transformed their lives with our <span className="text-primary-400 font-bold">elite fitness platform</span>.
+                Join our <span className="text-primary-400 font-black text-2xl">elite community</span> of <span className="text-primary-400 font-bold">10,000+ members</span> who have transformed their lives through fitness.
               </p>
             </div>
 
-            {/* Epic Stats */}
+            {/* Stats */}
             <div className="grid grid-cols-2 gap-6">
               {[
-                { icon: Star, number: '4.9/5', label: 'User Rating', color: 'from-yellow-600 to-yellow-800' },
-                { icon: Trophy, number: '1000+', label: 'Success Stories', color: 'from-purple-600 to-purple-800' },
-                { icon: Target, number: '24/7', label: 'Support', color: 'from-blue-600 to-blue-800' },
-                { icon: Shield, number: '100%', label: 'Secure', color: 'from-green-600 to-green-800' }
+                { icon: Star, number: '4.9/5', label: 'User Rating', color: 'from-orange-500 to-orange-600' },
+                { icon: Trophy, number: '1000+', label: 'Success Stories', color: 'from-purple-500 to-purple-600' },
+                { icon: Target, number: '24/7', label: 'Support', color: 'from-blue-500 to-blue-600' },
+                { icon: Shield, number: '100%', label: 'Secure', color: 'from-green-500 to-green-600' }
               ].map((stat, index) => (
                 <div
                   key={index}
-                  className="group perspective-1000 animate-fade-in-up"
-                  style={{ animationDelay: `${0.4 + index * 0.1}s` }}
+                  className="group"
                 >
-                  <div className="glass-card rounded-2xl p-4 text-center shadow-3d group-hover:shadow-glow border border-primary-600/20 group-hover:border-primary-600/40 transform-3d transition-all duration-500 hover:scale-110">
-                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} mb-3 shadow-glow group-hover:scale-110 transition-transform duration-300`}>
-                      <stat.icon className="w-6 h-6 text-white" />
+                  <div className="bg-dark-800/50 rounded-2xl p-5 text-center border border-gray-700/30">
+                    <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${stat.color} mb-3`}>
+                      <stat.icon className="w-7 h-7 text-white" />
                     </div>
-                    <div className="text-2xl font-black text-white mb-1 text-gradient">{stat.number}</div>
-                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">{stat.label}</div>
+                    <div className="text-2xl font-black text-white mb-1">{stat.number}</div>
+                    <div className="text-xs text-gray-400 font-semibold uppercase tracking-wide">{stat.label}</div>
                   </div>
                 </div>
               ))}
@@ -184,16 +188,16 @@ export default function RegisterPage() {
         </div>
 
         {/* Right Side - Registration Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8">
           <div className="w-full max-w-md">
 
             {/* Form Card */}
-            <div className="glass-card rounded-3xl p-8 sm:p-12 border border-primary-600/20 shadow-3d">
+            <div className="glass-card rounded-3xl p-8 sm:p-12 border border-primary-600/20">
               {/* Header */}
               <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-green-500/50 mb-6 shadow-glow">
-                  <Star className="w-4 h-4 text-green-500" />
-                  <span className="text-sm text-green-400 font-bold uppercase tracking-wider">Join Elite Community</span>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary-500/30 mb-6">
+                  <CheckCircle className="w-4 h-4 text-primary-400" />
+                  <span className="text-sm text-primary-400 font-bold uppercase tracking-wider">Join Our Elite Community</span>
                 </div>
 
                 <h2 className="text-3xl font-black text-white mb-3">
@@ -206,7 +210,7 @@ export default function RegisterPage() {
 
               {/* Error Message */}
               {errorMessage && (
-                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3 animate-fade-in">
+                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-red-400">{errorMessage}</p>
                 </div>
@@ -383,7 +387,7 @@ export default function RegisterPage() {
                   ) : (
                     <>
                       <span className="font-black tracking-wider">CREATE ACCOUNT</span>
-                      <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-3 h-5 w-5" />
                     </>
                   )}
                 </Button>
@@ -396,8 +400,8 @@ export default function RegisterPage() {
                 </p>
                 <Link href="/auth/login">
                   <Button variant="outline" className="btn-outline group">
-                    <span className="font-bold group-hover:text-white transition-colors">Sign In Instead</span>
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+                    <span className="font-bold">Sign In Instead</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
               </div>

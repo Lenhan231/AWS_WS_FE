@@ -61,20 +61,15 @@ const testimonials = [
 export function Testimonials() {
 	return (
 		<section className="py-24 bg-black relative overflow-hidden">
-			{/* Epic Background with Parallax */}
+			{/* Simplified Background */}
 			<div className="absolute inset-0 bg-mesh opacity-25" />
-			<div className="absolute inset-0">
-				<div className="absolute top-20 left-20 w-[700px] h-[700px] bg-primary-600/8 rounded-full blur-[180px] animate-float opacity-60" />
-				<div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-primary-700/10 rounded-full blur-[140px] animate-float opacity-80" style={{ animationDelay: '1.5s' }} />
-				<div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-primary-800/8 rounded-full blur-[120px] animate-float opacity-40" style={{ animationDelay: '3s' }} />
-			</div>
 
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
 				{/* Section Header */}
-				<div className="text-center mb-20 animate-fade-in-up">
+				<div className="text-center mb-20">
 					<div className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-card border border-primary-600/30 mb-8">
-						<Star className="w-5 h-5 text-yellow-500 animate-pulse" />
+						<Star className="w-5 h-5 text-yellow-500" />
 						<span className="text-sm font-black text-white uppercase tracking-wider">
 							Client <span className="text-gradient">Stories</span>
 						</span>
@@ -88,28 +83,24 @@ export function Testimonials() {
 					</p>
 				</div>
 
-				{/* 3D Testimonial Grid */}
+				{/* Testimonial Grid */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-					{testimonials.map((testimonial, index) => (
+					{testimonials.map((testimonial) => (
 						<div
 							key={testimonial.id}
-							className="group perspective-1000 animate-fade-in-up"
-							style={{ animationDelay: `${index * 0.15}s` }}
+							className="group"
 						>
-							<div className="relative transform-3d transition-all duration-700 hover:scale-105 hover:-translate-y-6">
-								{/* 3D Testimonial Card */}
-								<div className="glass-card rounded-3xl p-8 shadow-3d-lg group-hover:shadow-neon border border-primary-600/20 group-hover:border-primary-600/50 h-full">
-									{/* Animated glow border */}
-									<div className="absolute -inset-1 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-600 rounded-3xl opacity-0 group-hover:opacity-30 blur-xl transition duration-700" />
+							<div className="relative">
+								{/* Testimonial Card */}
+								<div className="glass-card rounded-3xl p-8 border border-primary-600/20 group-hover:border-primary-600/50 h-full">
 
-									{/* Stars Rating with Animation */}
+									{/* Stars Rating */}
 									<div className="flex items-center mb-6">
 										<div className="flex items-center gap-1">
 											{[...Array(testimonial.rating)].map((_, i) => (
 												<Star
 													key={i}
-													className="w-5 h-5 text-yellow-500 fill-yellow-500 group-hover:scale-125 transition-all duration-300"
-													style={{ animationDelay: `${i * 0.1}s` }}
+													className="w-5 h-5 text-yellow-500 fill-yellow-500"
 												/>
 											))}
 										</div>
@@ -120,29 +111,28 @@ export function Testimonials() {
 										</div>
 									</div>
 
-									{/* Quote with Epic Typography */}
+									{/* Quote */}
 									<div className="relative mb-8">
 										<Quote className="w-8 h-8 text-primary-500/30 absolute -top-2 -left-2" />
-										<p className="text-gray-300 italic text-base leading-relaxed pl-6 group-hover:text-white transition-colors duration-300">
+										<p className="text-gray-300 italic text-base leading-relaxed pl-6">
 											"{testimonial.text}"
 										</p>
 									</div>
 
-									{/* Profile with 3D Avatar */}
+									{/* Profile */}
 									<div className="flex items-center">
-										<div className="relative perspective-1000">
-											<div className="absolute inset-0 bg-primary-600 blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
-											<div className="relative w-16 h-16 rounded-full overflow-hidden border-3 border-primary-600/50 group-hover:border-primary-500 shadow-glow group-hover:shadow-neon transition-all duration-500 transform-3d group-hover:scale-110">
+										<div className="relative">
+											<div className="relative w-16 h-16 rounded-full overflow-hidden border-3 border-primary-600/50">
 												<img
 													src={testimonial.image}
 													alt={testimonial.name}
-													className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
+													className="w-full h-full object-cover"
 												/>
 											</div>
 										</div>
 
 										<div className="ml-4 flex-1">
-											<h4 className="font-black text-white text-lg group-hover:text-gradient transition-all duration-300">
+											<h4 className="font-black text-white text-lg">
 												{testimonial.name}
 											</h4>
 											<p className="text-primary-400 text-sm font-bold uppercase tracking-wider">
@@ -150,27 +140,21 @@ export function Testimonials() {
 											</p>
 										</div>
 									</div>
-
-									{/* Shine effect */}
-									<div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-										<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1200 rounded-3xl" />
-									</div>
 								</div>
 							</div>
 						</div>
 					))}
 				</div>
 
-				{/* Community Stats with 3D Effect */}
-				<div className="text-center animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
-					<div className="relative perspective-1000">
-						<div className="glass-card rounded-3xl p-12 max-w-6xl mx-auto shadow-3d-lg border border-primary-600/30 transform-3d hover:scale-[1.02] transition-all duration-500">
-							{/* Epic background */}
+				{/* Community Stats */}
+				<div className="text-center">
+					<div className="relative">
+						<div className="glass-card rounded-3xl p-12 max-w-6xl mx-auto border border-primary-600/30">
 							<div className="absolute inset-0 bg-gradient-to-br from-primary-600/5 via-transparent to-primary-800/5 rounded-3xl" />
 
 							<div className="relative">
 								<div className="flex items-center justify-center gap-3 mb-8">
-									<div className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-card border border-green-500/50 shadow-glow">
+									<div className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-card border border-green-500/50">
 										<Users className="w-5 h-5 text-green-500" />
 										<span className="text-green-400 font-black text-sm uppercase tracking-wider">10,000+ Happy Clients</span>
 									</div>
@@ -187,15 +171,14 @@ export function Testimonials() {
 								</p>
 
 								<div className="flex flex-col sm:flex-row gap-6 justify-center">
-									<button className="btn-primary btn-lg group px-12 py-4 shadow-neon relative overflow-hidden">
-										<div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-										<Star className="w-6 h-6 mr-3 relative z-10 group-hover:rotate-180 transition-transform duration-500" />
-										<span className="relative z-10 font-black">Start Your Journey</span>
+									<button className="btn-primary btn-lg group px-12 py-4">
+										<Star className="w-6 h-6 mr-3" />
+										<span className="font-black">Start Your Journey</span>
 									</button>
 
 									<button className="btn-outline btn-lg group px-12 py-4">
-										<Quote className="w-6 h-6 mr-3 group-hover:scale-125 transition-transform duration-300" />
-										<span className="font-black group-hover:text-white transition-colors">Read More Reviews</span>
+										<Quote className="w-6 h-6 mr-3" />
+										<span className="font-black">Read More Reviews</span>
 									</button>
 								</div>
 							</div>

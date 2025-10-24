@@ -24,37 +24,35 @@ export interface UserProfile {
   location?: Location;
 }
 
-// Location Types
+// Location Types (Backend format)
 export interface Location {
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  postalCode: string;
+  id?: number;
   latitude: number;
   longitude: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  formattedAddress?: string;
 }
 
-// Gym Types
+// Gym Types (Backend format)
 export interface Gym {
-  id: string;
+  id: number;
   name: string;
-  description: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  postalCode: string;
-  phoneNumber: string;
-  email: string;
+  description?: string;
+  logoUrl?: string;
+  phoneNumber?: string;
+  email?: string;
   website?: string;
-  latitude: number;
-  longitude: number;
+  active: boolean;
+  verified: boolean;
+  location: Location;
   averageRating?: number;
-  totalRatings?: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  ratingCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ContactInfo {
@@ -70,26 +68,34 @@ export interface OperatingHours {
   isClosed: boolean;
 }
 
-// Personal Trainer Types
+// Personal Trainer Types (Backend format)
 export interface PersonalTrainer {
-  id: string;
-  userId: string;
+  id: number;
+  bio?: string;
+  specializations?: string; // Comma-separated
+  certifications?: string; // Comma-separated
+  yearsOfExperience?: number;
+  hourlyRate?: number;
+  profileImageUrl?: string;
+  availability?: string; // JSON string
+  averageRating?: number;
+  ratingCount?: number;
+  user?: UserResponse;
+  location?: Location;
+  gyms?: Gym[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserResponse {
+  id: number;
+  email: string;
   firstName: string;
   lastName: string;
   phoneNumber?: string;
+  role: UserRole;
+  active: boolean;
   profileImageUrl?: string;
-  bio: string;
-  specialties: string[];
-  certifications: string[];
-  experience: number; // years
-  hourlyRate: number;
-  averageRating?: number;
-  totalRatings?: number;
-  availability: Availability[];
-  attachedGyms: string[]; // Gym IDs
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface Availability {
@@ -100,24 +106,31 @@ export interface Availability {
   isAvailable: boolean;
 }
 
-// Offer Types
+// Offer Types (Backend format)
 export interface Offer {
-  id: string;
+  id: number;
   title: string;
-  description: string;
+  description?: string;
   offerType: OfferType;
-  gymId?: string; // For gym offers
-  ptUserId?: string; // For PT offers
+  gymId?: number;
+  ptUserId?: number;
+  gymName?: string;
+  ptUserName?: string;
   price: number;
   currency: string;
   durationDescription?: string;
-  imageUrls: string; // Comma-separated URLs
+  imageUrls?: string; // Comma-separated URLs
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  active: boolean;
   averageRating?: number;
-  totalRatings?: number;
-  isActive: boolean;
-  isApproved: boolean;
-  createdAt: string;
-  updatedAt: string;
+  ratingCount?: number;
+  distanceKm?: number; // For search results
+  location?: Location;
+  gym?: Gym;
+  ptUser?: PersonalTrainer;
+  creator?: UserResponse;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type OfferType = 'GYM_OFFER' | 'PT_OFFER';
@@ -134,15 +147,16 @@ export interface ModerationFlag {
 export type ModerationFlagType = 'INAPPROPRIATE_CONTENT' | 'MISLEADING_INFO' | 'SPAM' | 'OTHER';
 export type ModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-// Rating Types
+// Rating Types (Backend format)
 export interface Rating {
-  id: string;
-  userId: string;
-  offerId: string;
+  id: number;
   rating: number; // 1-5
-  comment: string;
-  createdAt: string;
-  updatedAt: string;
+  comment?: string;
+  verified: boolean;
+  user?: UserResponse;
+  offer?: Offer;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Review Type (alias for Rating, used in gym/trainer pages)
@@ -151,19 +165,22 @@ export type Review = Rating;
 // Trainer Type (alias for PersonalTrainer)
 export type Trainer = PersonalTrainer;
 
-// Report Types
+// Report Types (Backend format)
 export interface Report {
-  id: string;
-  userId: string;
-  offerId?: string;
+  id: number;
   reason: string;
   details?: string;
   status: ReportStatus;
-  createdAt: string;
-  updatedAt: string;
+  reporter?: UserResponse;
+  reportedUser?: UserResponse;
+  offer?: Offer;
+  reviewedBy?: number;
+  adminNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export type ReportStatus = 'PENDING' | 'RESOLVED' | 'DISMISSED';
+export type ReportStatus = 'PENDING' | 'REVIEWED' | 'RESOLVED' | 'DISMISSED';
 
 // Search and Filter Types
 export interface SearchFilters {
@@ -290,7 +307,7 @@ export interface RegisterData {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
+  password?: string; // Optional: only used for Cognito signup, not sent to backend
   phoneNumber?: string;
   role: UserRole;
   profileImageUrl?: string;
@@ -311,6 +328,22 @@ export interface RegisterResponse {
   user: User;
   token?: string;
   requiresConfirmation?: boolean;
+}
+
+// Auth Action Result Types
+export interface AuthActionResult {
+  needsConfirmation?: boolean;
+  email?: string;
+}
+
+// Cognito Confirmation Types
+export interface ResendCodeResult {
+  success: boolean;
+  data?: {
+    codeSent: boolean;
+    destination: string;
+  };
+  error?: string;
 }
 
 export interface PresignedUrlResponse {

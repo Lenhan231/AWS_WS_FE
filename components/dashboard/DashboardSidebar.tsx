@@ -49,8 +49,6 @@ const navigation = {
   ],
   ADMIN: [
     { name: 'Dashboard', href: '/dashboard/admin', icon: Home },
-    { name: 'Pending Approvals', href: '/dashboard/admin/approvals', icon: Shield },
-    { name: 'Moderation', href: '/dashboard/admin/moderation', icon: FileText },
     { name: 'Users', href: '/dashboard/admin/users', icon: Users },
     { name: 'Gyms', href: '/dashboard/admin/gyms', icon: Building2 },
     { name: 'Analytics', href: '/dashboard/admin/analytics', icon: BarChart3 },
@@ -178,9 +176,8 @@ export function DashboardSidebar() {
               <div className="flex-shrink-0 flex items-center px-6 py-6 border-b border-primary-600/30">
                 <Link href="/" className="flex items-center group">
                   <div className="relative">
-                    <div className="absolute inset-0 bg-primary-600 blur-lg opacity-50 group-hover:opacity-70 transition-opacity" />
-                    <div className={`relative h-10 w-10 bg-gradient-to-br ${getRoleBadgeColor()} rounded-xl flex items-center justify-center shadow-neon group-hover:shadow-neon-lg transition-all duration-300 group-hover:scale-110`}>
-                      <Dumbbell className="text-white h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
+                    <div className={`relative h-10 w-10 bg-gradient-to-br ${getRoleBadgeColor()} rounded-xl flex items-center justify-center`}>
+                      <Dumbbell className="text-white h-5 w-5" />
                     </div>
                   </div>
                   <div className="ml-3">
@@ -200,32 +197,26 @@ export function DashboardSidebar() {
                       key={item.name}
                       href={item.href}
                       className={cn(
-                        'group flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl transition-all duration-300 animate-fade-in-up',
+                        'group flex items-center justify-between px-4 py-3 text-sm font-bold rounded-xl transition-colors',
                         isActive
-                          ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-neon scale-105'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5 hover:scale-102'
+                          ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
                       )}
-                      style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <div className="flex items-center">
-                        <item.icon
-                          className={cn(
-                            'h-5 w-5 mr-3 transition-all duration-300',
-                            isActive ? 'scale-110' : 'group-hover:scale-110'
-                          )}
-                        />
+                        <item.icon className="h-5 w-5 mr-3" />
                         <span className="uppercase tracking-wider">{item.name}</span>
                       </div>
-                      {isActive && <ChevronRight className="h-4 w-4 animate-pulse" />}
+                      {isActive && <ChevronRight className="h-4 w-4" />}
                     </Link>
                   );
                 })}
               </nav>
 
               <div className="flex-shrink-0 border-t border-primary-600/30 p-4">
-                <div className="glass-card rounded-xl p-4 border border-primary-600/30 hover:border-primary-600/60 transition-all duration-300 group">
+                <div className="glass-card rounded-xl p-4 border border-primary-600/30">
                   <div className="flex items-center">
-                    <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${getRoleBadgeColor()} flex items-center justify-center shadow-neon group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${getRoleBadgeColor()} flex items-center justify-center`}>
                       <span className="text-lg font-black text-white">
                         {user?.firstName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
                       </span>
@@ -238,7 +229,7 @@ export function DashboardSidebar() {
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-red-600/20 transition-all group-hover:scale-110"
+                      className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-red-600/20 transition-colors"
                       title="Logout"
                     >
                       <LogOut className="h-5 w-5" />

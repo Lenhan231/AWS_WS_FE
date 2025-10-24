@@ -8,77 +8,28 @@ import { Search, Dumbbell, MapPin, TrendingUp, Zap, ArrowRight, Star, Users } fr
 export function Hero() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isVisible, setIsVisible] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
 
   useEffect(() => {
     setIsVisible(true);
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 20 - 10,
-        y: (e.clientY / window.innerHeight) * 20 - 10,
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
-      {/* Advanced Animated Background with Mesh Gradient */}
-      <div className="absolute inset-0 bg-mesh">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black opacity-60" />
-
-        {/* 3D Floating Orbs with Parallax */}
-        <div
-          className="absolute top-20 left-[10%] w-[500px] h-[500px] bg-primary-600/20 rounded-full blur-[120px] animate-float"
-          style={{ transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)` }}
-        />
-        <div
-          className="absolute bottom-20 right-[10%] w-[600px] h-[600px] bg-primary-700/15 rounded-full blur-[140px] animate-float"
-          style={{
-            transform: `translate(${-mousePosition.x * 0.5}px, ${-mousePosition.y * 0.5}px)`,
-            animationDelay: '1s'
-          }}
-        />
-        <div
-          className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-primary-800/10 rounded-full blur-[100px] animate-float"
-          style={{
-            transform: `translate(-50%, -50%) translate(${mousePosition.x * 0.3}px, ${mousePosition.y * 0.3}px)`,
-            animationDelay: '2s'
-          }}
-        />
+    <div className="relative min-h-[calc(100vh-5rem)] sm:min-h-screen flex items-center justify-center overflow-hidden bg-black">
+      {/* Simplified Background */}
+      <div className="absolute inset-0 bg-black">
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
       </div>
-
-      {/* Animated Grid Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(rgba(220, 38, 38, 0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(220, 38, 38, 0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px',
-          transform: 'perspective(1000px) rotateX(60deg)',
-          transformOrigin: 'center bottom'
-        }} />
-      </div>
-
-      {/* Spotlight Effect */}
-      <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black opacity-70" />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-32">
-        <div className={`text-center space-y-8 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 md:py-32">
+        <div className={`text-center space-y-4 sm:space-y-6 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
 
-          {/* Premium Badge with 3D Effect */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-card shadow-neon animate-fade-in-up border border-primary-600/30">
-            <div className="relative">
-              <Zap className="w-5 h-5 text-primary-500 animate-glow-pulse" />
-              <div className="absolute inset-0 blur-lg bg-primary-500 opacity-50" />
-            </div>
-            <span className="text-sm font-black text-white uppercase tracking-wider">
-              #1 <span className="text-gradient">Fitness Platform</span>
+          {/* Simplified Badge */}
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-dark-900 border border-primary-600 animate-fade-in">
+            <Zap className="w-4 h-4 text-primary-500" />
+            <span className="text-sm font-semibold text-white">
+              #1 <span className="text-primary-500">Fitness Platform</span>
             </span>
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
@@ -87,131 +38,87 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Epic Hero Title with 3D Effect */}
-          <div className="perspective-2000">
-            <h1
-              className="hero-title animate-fade-in-up"
-              style={{
-                animationDelay: '0.1s',
-                transform: `rotateX(${mousePosition.y * 0.5}deg) rotateY(${mousePosition.x * 0.5}deg)`
-              }}
-            >
-              TRANSFORM YOUR
-              <br />
-              <span className="relative inline-block">
-                <span className="text-neon animate-glow">BODY & MIND</span>
-                <div className="absolute inset-0 blur-2xl bg-primary-600 opacity-30 animate-glow-pulse" />
-              </span>
-            </h1>
-          </div>
+          {/* Hero Title */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white animate-fade-in-up">
+            TRANSFORM YOUR
+            <br />
+            <span className="text-primary-500">BODY & MIND</span>
+          </h1>
 
-          {/* Subtitle with Glassmorphism */}
-          <div className="max-w-4xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <p className="hero-subtitle mb-4">
-              Discover <span className="text-primary-400 font-bold">premium gyms</span> and <span className="text-primary-400 font-bold">elite personal trainers</span> near you.
+          {/* Subtitle */}
+          <div className="max-w-3xl mx-auto animate-fade-in-up px-4">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-3">
+              Discover <span className="text-primary-400 font-semibold">premium gyms</span> and <span className="text-primary-400 font-semibold">elite personal trainers</span> near you.
             </p>
-            <p className="text-lg text-gray-400">
-              Start your fitness journey today with <span className="text-gradient font-black text-xl">Vertex</span>
+            <p className="text-sm sm:text-base text-gray-400">
+              Start your fitness journey today with <span className="text-primary-500 font-bold">Vertex</span>
             </p>
           </div>
 
-          {/* 3D Stats Cards */}
-          <div className="flex flex-wrap justify-center gap-6 py-12 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          {/* Stats Cards */}
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 py-6 sm:py-8 animate-fade-in px-4">
             {[
-              { icon: Dumbbell, number: '1000+', label: 'Premium Gyms', color: 'from-primary-600 to-primary-800' },
-              { icon: Users, number: '500+', label: 'Elite Trainers', color: 'from-primary-700 to-primary-900' },
-              { icon: Star, number: '10K+', label: 'Active Members', color: 'from-primary-600 to-primary-800' }
+              { icon: Dumbbell, number: '1000+', label: 'Premium Gyms' },
+              { icon: Users, number: '500+', label: 'Elite Trainers' },
+              { icon: Star, number: '10K+', label: 'Active Members' }
             ].map((stat, index) => (
-              <div
-                key={index}
-                className="group relative perspective-1000"
-                style={{ animationDelay: `${0.4 + index * 0.1}s` }}
-              >
-                <div className="relative glass-card px-8 py-6 transform-3d transition-all duration-500 hover:scale-110 hover:-translate-y-2 shadow-3d hover:shadow-neon">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-5 rounded-2xl`} />
-                  <div className="relative text-center">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-800/20 mb-3 shadow-glow">
-                      <stat.icon className="w-6 h-6 text-primary-500" />
-                    </div>
-                    <div className="text-4xl font-black text-white mb-1 text-gradient">{stat.number}</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wider font-bold">{stat.label}</div>
+              <div key={index} className="bg-dark-900 border border-dark-700 rounded-lg px-4 sm:px-6 py-3 sm:py-4 hover:border-primary-600 transition-colors min-w-[100px] sm:min-w-[120px]">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary-600/20 mb-2">
+                    <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500" />
                   </div>
-                  {/* Shine Effect */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{stat.number}</div>
+                  <div className="text-xs text-gray-400 uppercase">{stat.label}</div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Premium Search Bar with 3D Effect */}
-          <div className="max-w-3xl mx-auto animate-fade-in-up perspective-1000" style={{ animationDelay: '0.5s' }}>
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-600 rounded-3xl blur-xl opacity-50 group-hover:opacity-75 animate-glow-pulse" />
-              <div className="relative glass-card p-2 shadow-3d-lg">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 relative">
-                    <MapPin className="absolute left-5 top-1/2 transform -translate-y-1/2 text-primary-500 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder="Enter your location..."
-                      className="w-full h-16 pl-14 pr-5 bg-dark-900/80 backdrop-blur-xl border-2 border-dark-700/50 rounded-2xl text-white text-lg placeholder:text-gray-500 focus:outline-none focus:border-primary-600/50 focus:shadow-glow transition-all duration-300"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Button className="btn-primary btn-lg group/btn px-10 shadow-neon">
-                    <Search className="w-5 h-5 mr-2 group-hover/btn:rotate-90 transition-transform duration-300" />
-                    <span>Search Now</span>
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform duration-300" />
-                  </Button>
+          {/* Search Bar */}
+          <div className="max-w-3xl mx-auto animate-fade-in px-4">
+            <div className="bg-dark-900 border border-dark-700 rounded-lg p-2">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1 relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-500 w-4 h-4 sm:w-5 sm:h-5" />
+                  <input
+                    type="text"
+                    placeholder="Enter your location..."
+                    className="w-full h-10 sm:h-12 pl-10 sm:pl-12 pr-3 sm:pr-4 bg-dark-800 border border-dark-700 rounded-lg text-sm sm:text-base text-white placeholder:text-gray-500 focus:outline-none focus:border-primary-600 transition-colors"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
+                <Button size="lg" className="px-6 sm:px-8 w-full sm:w-auto">
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <span>Search Now</span>
+                </Button>
               </div>
             </div>
           </div>
 
-          {/* CTA Buttons with Advanced Effects */}
-          <div className="flex flex-wrap justify-center gap-6 pt-12 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-            <Link href="/gyms">
-              <Button className="btn-primary btn-lg group/gym px-10 shadow-neon-lg relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover/gym:opacity-100 transition-opacity duration-500" />
-                <Dumbbell className="w-6 h-6 mr-3 relative z-10 group-hover/gym:rotate-180 transition-transform duration-500" />
-                <span className="relative z-10 text-lg">Find Gyms</span>
-                <ArrowRight className="w-6 h-6 ml-3 relative z-10 group-hover/gym:translate-x-2 transition-transform duration-300" />
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-6 sm:pt-8 animate-fade-in px-4">
+            <Link href="/gyms" className="w-full sm:w-auto">
+              <Button size="lg" className="px-6 sm:px-8 w-full sm:w-auto">
+                <Dumbbell className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <span>Find Gyms</span>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </Button>
             </Link>
 
-            <Link href="/trainers">
-              <Button className="btn-outline btn-lg group/trainer px-10 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-800 opacity-0 group-hover/trainer:opacity-100 transition-opacity duration-500" />
-                <TrendingUp className="w-6 h-6 mr-3 relative z-10 group-hover/trainer:scale-110 transition-transform duration-300" />
-                <span className="relative z-10 text-lg group-hover/trainer:text-white transition-colors">Find Trainers</span>
-                <ArrowRight className="w-6 h-6 ml-3 relative z-10 group-hover/trainer:translate-x-2 transition-transform duration-300" />
+            <Link href="/trainers" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="px-6 sm:px-8 w-full sm:w-auto">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <span>Find Trainers</span>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </Button>
             </Link>
-          </div>
-
-          {/* Floating 3D Icons */}
-          <div className="absolute top-20 left-[5%] animate-float hidden lg:block opacity-20 hover:opacity-100 transition-opacity">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary-600/30 to-primary-800/30 backdrop-blur-xl border border-primary-600/30 flex items-center justify-center shadow-neon transform-3d hover:scale-125 transition-all duration-500">
-              <Dumbbell className="w-12 h-12 text-primary-500" />
-            </div>
-          </div>
-
-          <div className="absolute bottom-32 right-[5%] animate-float hidden lg:block opacity-20 hover:opacity-100 transition-opacity" style={{ animationDelay: '1s' }}>
-            <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-primary-700/30 to-primary-900/30 backdrop-blur-xl border border-primary-700/30 flex items-center justify-center shadow-neon transform-3d hover:scale-125 transition-all duration-500">
-              <Zap className="w-14 h-14 text-primary-400" />
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Gradient Fade */}
+      {/* Bottom Fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
-
-      {/* Animated Border Line */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-600 to-transparent animate-border-flow" />
     </div>
   );
 }

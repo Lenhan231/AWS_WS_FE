@@ -81,12 +81,45 @@ class ApiClient {
 
   private setupInterceptors() {
     this.client.interceptors.request.use(
-      (config) => {
+      async (config) => {
+        // Check if using Basic Auth mode (no Cognito)
+        const useCognito = process.env.NEXT_PUBLIC_USE_COGNITO !== 'false';
+
+        if (!useCognito) {
+          // Basic Auth mode for local testing
+          const username = process.env.NEXT_PUBLIC_BASIC_USER || 'local-admin';
+          const password = process.env.NEXT_PUBLIC_BASIC_PASS || 'local-password';
+
+          // Encode credentials to Base64
+          const credentials = typeof window !== 'undefined'
+            ? btoa(`${username}:${password}`)
+            : Buffer.from(`${username}:${password}`).toString('base64');
+
+          config.headers = config.headers ?? {};
+          (config.headers as Record<string, string>).Authorization = `Basic ${credentials}`;
+
+          console.log('[API] Using Basic Auth mode');
+          return config;
+        }
+
+        // Cognito/Mock Auth mode
         if (typeof window !== 'undefined') {
-          const token = localStorage.getItem('auth_token');
-          if (token) {
-            config.headers = config.headers ?? {};
-            (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+          // Try to get token from Cognito first
+          try {
+            const { cognito } = await import('./cognito');
+            const token = await cognito.getAccessToken();
+
+            if (token) {
+              config.headers = config.headers ?? {};
+              (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+            }
+          } catch (error) {
+            // Fallback to localStorage if Cognito fails
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+              config.headers = config.headers ?? {};
+              (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+            }
           }
         }
         return config;
@@ -97,6 +130,11 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError<{ message?: string; error?: string }>) => {
+        // Silently ignore cancelled/aborted requests
+        if (axios.isCancel(error) || error.message === 'Request aborted' || error.code === 'ERR_CANCELED') {
+          return Promise.reject(error);
+        }
+
         console.error('API Error:', {
           message: error.message,
           response: error.response?.data,
@@ -165,6 +203,16 @@ class ApiClient {
 
   private handleError<T>(error: unknown): ApiResponse<T> {
     const axiosError = error as AxiosError<{ message?: string; error?: string }>;
+
+    // Silently handle cancelled requests
+    if (axios.isCancel(error) || axiosError.message === 'Request aborted' || axiosError.code === 'ERR_CANCELED') {
+      return {
+        success: false,
+        error: 'Request cancelled',
+        message: 'Request cancelled',
+      };
+    }
+
     const message =
       axiosError.response?.data?.message ||
       axiosError.response?.data?.error ||
@@ -182,51 +230,57 @@ class ApiClient {
 const apiClient = new ApiClient();
 
 const authApi = {
-  login: (credentials: LoginCredentials) =>
-    apiClient.post<LoginResponse>('/auth/login', credentials),
   register: (data: RegisterData) => apiClient.post<RegisterResponse>('/auth/register', data),
   me: () => apiClient.get<User>('/auth/me'),
-  changePassword: (payload: ChangePasswordPayload) =>
-    apiClient.post<{ message: string }>('/auth/change-password', payload),
+  // Note: login and changePassword endpoints don't exist on backend
+  // Authentication is handled by Cognito (Mock or Real)
 };
 
 const gymApi = {
   create: (data: Partial<Gym>) => apiClient.post<Gym>('/gyms', data),
-  update: (gymId: string, data: Partial<Gym>) => apiClient.put<Gym>(`/gyms/${gymId}`, data),
-  getById: (gymId: string) => apiClient.get<Gym>(`/gyms/${gymId}`),
+  update: (gymId: string | number, data: Partial<Gym>) => apiClient.put<Gym>(`/gyms/${gymId}`, data),
+  getById: (gymId: string | number) => apiClient.get<Gym>(`/gyms/${gymId}`),
   getAll: (params?: GymQueryParams) =>
     apiClient.get<PaginatedResponse<Gym>>('/gyms', { params }),
   search: (params: Partial<SearchFilters>) =>
     apiClient.get<PaginatedResponse<Gym>>('/gyms/search', { params }),
-  assignPT: (gymId: string, ptUserId: string) =>
-    apiClient.post<{ message: string }>(`/gyms/${gymId}/assign-pt`, { ptUserId }),
-  getPTAssociations: (gymId: string) =>
-    apiClient.get<PaginatedResponse<unknown>>(`/gyms/${gymId}/pt-associations`),
-  approvePTAssociation: (associationId: string) =>
+  assignPT: (gymId: string | number, ptUserId: string | number) =>
+    apiClient.post<{ message: string }>(`/gyms/${gymId}/assign-pt`, null, { params: { ptUserId } }),
+  getPTAssociations: (gymId: string | number) =>
+    apiClient.get<unknown[]>(`/gyms/${gymId}/pt-associations`),
+  approvePTAssociation: (associationId: string | number) =>
     apiClient.put<{ message: string }>(`/gyms/pt-associations/${associationId}/approve`),
-  rejectPTAssociation: (associationId: string) =>
+  rejectPTAssociation: (associationId: string | number) =>
     apiClient.put<{ message: string }>(`/gyms/pt-associations/${associationId}/reject`),
 };
 
 const ptUsersApi = {
+  // Get current PT user profile
+  getMyProfile: () => apiClient.get<PersonalTrainer>('/pt-users/me'),
+  // Update current PT user profile
+  updateMyProfile: (data: Partial<PersonalTrainer>) =>
+    apiClient.put<PersonalTrainer>('/pt-users/me', data),
+  // Create PT user profile
   create: (data: Partial<PersonalTrainer>) => apiClient.post<PersonalTrainer>('/pt-users', data),
-  update: (ptUserId: string, data: Partial<PersonalTrainer>) =>
+  // Update PT user profile by ID
+  update: (ptUserId: string | number, data: Partial<PersonalTrainer>) =>
     apiClient.put<PersonalTrainer>(`/pt-users/${ptUserId}`, data),
-  getById: (ptUserId: string) => apiClient.get<PersonalTrainer>(`/pt-users/${ptUserId}`),
+  // Get PT user by ID
+  getById: (ptUserId: string | number) => apiClient.get<PersonalTrainer>(`/pt-users/${ptUserId}`),
+  // Get all PT users
   getAll: (params?: Partial<SearchFilters>) =>
-    apiClient.get<PaginatedResponse<PersonalTrainer>>('/pt-users', { params }),
-  getGymAssociations: (ptUserId: string) =>
-    apiClient.get<PaginatedResponse<unknown>>(`/pt-users/${ptUserId}/gym-associations`),
+    apiClient.get<PersonalTrainer[]>('/pt-users', { params }),
+  // Get gym associations for PT user
+  getGymAssociations: (ptUserId: string | number) =>
+    apiClient.get<unknown[]>(`/pt-users/${ptUserId}/gym-associations`),
 };
 
 const offerApi = {
   create: (data: Partial<Offer>) => apiClient.post<Offer>('/offers', data),
-  update: (offerId: string, data: Partial<Offer>) =>
+  update: (offerId: string | number, data: Partial<Offer>) =>
     apiClient.put<Offer>(`/offers/${offerId}`, data),
-  getById: (offerId: string) => apiClient.get<Offer>(`/offers/${offerId}`),
-  getAll: (params?: OfferQueryParams) =>
-    apiClient.get<PaginatedResponse<Offer>>('/offers', { params }),
-  delete: (offerId: string) => apiClient.delete<{ message: string }>(`/offers/${offerId}`),
+  getById: (offerId: string | number) => apiClient.get<Offer>(`/offers/${offerId}`),
+  // Note: Use searchApi.searchOffers() for listing offers - no GET /offers endpoint exists
 };
 
 const searchApi = {
@@ -234,37 +288,35 @@ const searchApi = {
     apiClient.post<PaginatedResponse<Offer>>('/search/offers', filters),
   searchOffersByQuery: (params: Partial<SearchFilters>) =>
     apiClient.get<PaginatedResponse<Offer>>('/search/offers', { params }),
-  nearby: (params: NearbySearchParams) =>
-    apiClient.get<NearbySearchResponse>('/search/nearby', { params }),
 };
 
 const ratingApi = {
-  create: (data: { offerId: string; rating: number; comment?: string }) =>
+  create: (data: { offerId: number; rating: number; comment?: string }) =>
     apiClient.post<Rating>('/ratings', data),
-  getByOffer: (offerId: string, params?: RatingQueryParams) =>
+  getByOffer: (offerId: string | number, params?: RatingQueryParams) =>
     apiClient.get<PaginatedResponse<Rating>>(`/ratings/offer/${offerId}`, { params }),
 };
 
 const reportApi = {
-  create: (data: { offerId: string; reason: string; details?: string }) =>
+  create: (data: { offerId: number; reportedUserId?: number; reason: string; details?: string }) =>
     apiClient.post<Report>('/reports', data),
 };
 
 const adminApi = {
   getPendingOffers: (params?: OfferQueryParams) =>
     apiClient.get<PaginatedResponse<Offer>>('/admin/offers/pending', { params }),
-  moderateOffer: (offerId: string, payload: ModerateOfferPayload) =>
+  moderateOffer: (offerId: string | number, payload: ModerateOfferPayload) =>
     apiClient.put<Offer>(`/admin/offers/${offerId}/moderate`, payload),
   getPendingReports: (params?: ReportQueryParams) =>
     apiClient.get<PaginatedResponse<Report>>('/admin/reports/pending', { params }),
-  getReports: (params?: ReportQueryParams) =>
-    apiClient.get<PaginatedResponse<Report>>('/admin/reports', { params }),
-  resolveReport: (reportId: string) =>
+  getReports: (status: 'PENDING' | 'UNDER_REVIEW' | 'RESOLVED' | 'DISMISSED', params?: PaginationParams) =>
+    apiClient.get<PaginatedResponse<Report>>('/admin/reports', { params: { status, ...params } }),
+  resolveReport: (reportId: string | number) =>
     apiClient.put<Report>(`/admin/reports/${reportId}/resolve`),
-  dismissReport: (reportId: string) =>
+  dismissReport: (reportId: string | number) =>
     apiClient.put<Report>(`/admin/reports/${reportId}/dismiss`),
   getPendingPTAssociations: (params?: PaginationParams) =>
-    apiClient.get<PaginatedResponse<unknown>>('/admin/pt-associations/pending', { params }),
+    apiClient.get<unknown[]>('/admin/pt-associations/pending', { params }),
 };
 
 const mediaApi = {

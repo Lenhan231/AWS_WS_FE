@@ -34,7 +34,14 @@ export default function LoginPage() {
     setErrorMessage('');
 
     try {
-      await login(formData.email, formData.password);
+      const result = await login(formData.email, formData.password);
+
+      // Check if confirmation is needed
+      if (result?.needsConfirmation) {
+        console.log('[LOGIN] User not confirmed, redirecting to confirmation page');
+        router.push(`/auth/confirm?email=${encodeURIComponent(formData.email)}`);
+        return;
+      }
 
       // Get user info after login
       const { user } = useAuthStore.getState();

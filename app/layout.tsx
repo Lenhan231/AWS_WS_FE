@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { Toaster } from 'react-hot-toast';
+import { MockAuthBanner } from '@/components/dev/MockAuthBanner';
+import { SeedMockUsers } from '@/components/dev/SeedMockUsers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,8 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <MockAuthBanner />
         <Providers>
           {children}
+          <SeedMockUsers />
           <Toaster
             position="top-right"
             toastOptions={{

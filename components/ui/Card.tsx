@@ -6,11 +6,9 @@ const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     <div
       ref={ref}
       className={cn(
-        // Premium card with 3D effects
-        'rounded-2xl border border-dark-700/50 text-white shadow-3d-lg overflow-hidden transition-all duration-500',
-        'bg-gradient-to-br from-dark-800/95 to-dark-900/95 backdrop-blur-md',
-        'hover:shadow-glow hover:border-primary-900/50 hover:scale-[1.02] hover:-translate-y-1',
-        'transform-3d relative',
+        // Simplified card
+        'rounded-lg border border-dark-700 bg-dark-900 text-white overflow-hidden transition-colors duration-150',
+        'hover:border-dark-600',
         className
       )}
       {...props}
@@ -24,8 +22,7 @@ const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     <div
       ref={ref}
       className={cn(
-        'flex flex-col space-y-2 p-8 border-b border-dark-700/50',
-        'bg-gradient-to-r from-primary-600/5 via-transparent to-primary-800/5',
+        'flex flex-col space-y-2 p-6 border-b border-dark-700',
         className
       )}
       {...props}
@@ -39,10 +36,7 @@ const CardTitle = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLHeadingEle
     <h3
       ref={ref}
       className={cn(
-        'text-3xl font-black leading-none tracking-tight text-white',
-        'hover:text-gradient transition-all duration-300',
-        // Add text shadow for depth
-        'drop-shadow-[0_2px_10px_rgba(220,38,38,0.3)]',
+        'text-2xl font-bold text-white',
         className
       )}
       {...props}
@@ -56,8 +50,7 @@ const CardDescription = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLPara
     <p
       ref={ref}
       className={cn(
-        'text-base text-gray-400 leading-relaxed',
-        'hover:text-gray-300 transition-colors duration-300',
+        'text-sm text-gray-400',
         className
       )}
       {...props}
@@ -70,7 +63,7 @@ const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('p-8', className)}
+      className={cn('p-6', className)}
       {...props}
     />
   )
@@ -82,8 +75,7 @@ const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     <div
       ref={ref}
       className={cn(
-        'flex items-center p-8 pt-0 border-t border-dark-700/50',
-        'bg-gradient-to-r from-transparent via-primary-600/5 to-transparent',
+        'flex items-center p-6 pt-0',
         className
       )}
       {...props}
